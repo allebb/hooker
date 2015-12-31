@@ -15,7 +15,6 @@ $config = [
      * Example: git@github.com:bobsta63/hooker.git
      */
     'repo' => '',
-    
     /**
      * Which branch to pull/checkout from.
      * Example: master
@@ -35,6 +34,10 @@ $config = [
      */
     'post_commands' => [
     ],
+    /**
+     * The path to the git binary.
+     */
+    'git_bin' => 'git',
 ];
 
 /**
@@ -50,8 +53,14 @@ if (file_exists('hooker.conf.php')) {
     $config = array_merge($config, $config_file);
 }
 
-if((!function_exists('shell_exedc')) && $config['debug']){
+if ((!function_exists('shell_exec')) && $config['debug']) {
     echo 'The PHP function shell_exec() does not exist!';
+    exit;
+}
+
+$git_output = shell_exec($config['git_bin'] . ' --version 2>&1');
+if ((!strpos($git_output, 'version')) && $config['debug']) {
+    echo "The 'git' binary was not found on your server!";
     exit;
 }
 

@@ -3,5 +3,5 @@
  * Hooker Configuration File
  */
 return [
-    'debug' => false,
+    'debug' => true,
 ];
