@@ -47,6 +47,7 @@ $config = [
      * Deployment commands.
      */
     'deploy_commands' => [
+        'cd {{local-repo}}',
         'git reset --hard HEAD',
         'git pull',
     ],
@@ -55,6 +56,11 @@ $config = [
      */
     'post_commands' => [
     ],
+    /**
+     * If the repo is GitHub hosted, set to true, this will ensure
+     * web-hook is only executed on a 'push' event from GitHub.
+     */
+    'is_github' => false,
     /**
      * The path to the git binary.
      */
@@ -109,10 +115,22 @@ if (isset($_REQUEST['app'])) {
     exit;
 }
 
+//if($config['is_github']){
+//    
+//}
+//var_dump(getallheaders());
+
 $cmd_tags = [
-    '{{ local-repo }}' => $config['local_repo'],
-    '{{ user }}' => $config['local_repo'],
-    '{{ git-bin }}' => $config['git_bin'],
-    '{{ branch }}' => $config['branch'],
-    '{{ repo }}' => $config['remote_repo'],
+    '{{local-repo}}' => $config['local_repo'],
+    '{{user}}' => $config['local_repo'],
+    '{{git-bin}}' => $config['git_bin'],
+    '{{branch}}' => $config['branch'],
+    '{{repo}}' => $config['remote_repo'],
 ];
+
+$command_array = [];
+foreach ($config['deploy_commands'] as $commands) {
+    $command_array[] = str_replace(array_keys($cmd_tags), $cmd_tags, $commands);
+}
+
+var_dump($command_array);
