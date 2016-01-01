@@ -48,13 +48,13 @@ $config = [
      */
     'deploy_commands' => [
         'cd {{local-repo}} && git reset --hard HEAD && git pull',
-        //'cd {{local-repo}} && sudo -u {{user}} git reset --hard HEAD && sudo -u {{user}} git pull',
+    //'cd {{local-repo}} && sudo -u {{user}} git reset --hard HEAD && sudo -u {{user}} git pull',
     ],
     /**
      * Post-deploy commands to run.
      */
     'post_commands' => [
-        //'chmod 755 -R {{local-repo}}/storage',
+    //'chmod 755 -R {{local-repo}}/storage',
     ],
     /**
      * If the repo is GitHub hosted, set to true, this will ensure
@@ -90,9 +90,18 @@ if (isset($_REQUEST['ping'])) {
     exit;
 }
 
+if ($config['debug']) {
+    echo 'Loading configuration:';
+    var_dump($config);
+}
+
 if (file_exists('hooker.conf.php')) {
     $config_file = require_once 'hooker.conf.php';
     $config = array_merge($config, $config_file);
+    if ($config['debug']) {
+        echo 'Loading configuration from configuration override file (hooker.conf.php), new configuration:';
+        var_dump($config);
+    }
 }
 
 if ((!function_exists('shell_exec')) && $config['debug']) {
@@ -128,10 +137,9 @@ $cmd_tags = [
     '{{repo}}' => $config['remote_repo'],
 ];
 
-foreach ($config['deploy_commands'] as $commands) {
+foreach (array_merge($config['pre_commands'], $config['deploy_commands'], $config['post_commands']) as $commands) {
     $command_array[] = str_replace(array_keys($cmd_tags), $cmd_tags, $commands);
 }
-
 
 //if($config['is_github']){
 //    
@@ -141,5 +149,8 @@ foreach ($config['deploy_commands'] as $commands) {
 
 foreach ($command_array as $execute) {
     shell_exec($execute);
+    if ($config['debug']) {
+        echo "Running: " . $execute;
+    }
 }
 echo "ok";
