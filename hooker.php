@@ -19,12 +19,16 @@ $config = [
      * The remote repository to pull/checkout form.
      * Example: git@github.com:bobsta63/hooker.git
      */
-    'repo' => '',
+    'remote_repo' => '',
     /**
      * Which branch to pull/checkout from.
      * Example: master
      */
     'branch' => 'master',
+    /**
+     * Local repository/hosted directory.
+     */
+    'local_repo' => '',
     /**
      * Enable debug mode - Will output errors to the screen.
      */
@@ -38,6 +42,13 @@ $config = [
      * Pre-deploy commands to run.
      */
     'pre_commands' => [
+    ],
+    /**
+     * Deployment commands.
+     */
+    'deploy_commands' => [
+        'git reset --hard HEAD',
+        'git pull',
     ],
     /**
      * Post-deploy commands to run.
@@ -91,8 +102,17 @@ if ((!strpos($git_output, 'version')) && $config['debug']) {
 
 if (isset($_REQUEST['app'])) {
     if (isset($config['sites'][$_REQUEST['app']])) {
+        $config = array_merge($config, $config['sites'][$_REQUEST['app']]);
         echo "Deploying " . $_REQUEST['app'];
     }
     echo "The requested \"app\" configuration was not found!";
     exit;
 }
+
+$cmd_tags = [
+    '{{ local-repo }}' => $config['local_repo'],
+    '{{ user }}' => $config['local_repo'],
+    '{{ git-bin }}' => $config['git_bin'],
+    '{{ branch }}' => $config['branch'],
+    '{{ repo }}' => $config['remote_repo'],
+];
