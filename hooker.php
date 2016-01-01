@@ -11,6 +11,10 @@
 $config = [
 
     /**
+     * Enable debug mode - Will output errors to the screen.
+     */
+    'debug' => false,
+    /**
      * Set an opitional key for added protection.
      * Example: qgW87T9RgJYKj2DucnChELXeJhLCFP8N
      */
@@ -28,16 +32,12 @@ $config = [
     /**
      * Local repository/hosted directory.
      */
-    'local_repo' => '',
+    'local_repo' => __DIR__,
     /**
-     * Enable debug mode - Will output errors to the screen.
+     * Set a specific user to run the pre, deploy and post commands with (if false will run as the current user, normally 'www-data')
+     * Example: jbloggs
      */
-    'debug' => false,
-    /**
-     * Set a specific user to run the pre and post commands with (if false will run as the current user)
-     * Example: wwwdata
-     */
-    'sudo_as' => false,
+    'user' => false,
     /**
      * Pre-deploy commands to run.
      */
@@ -47,14 +47,14 @@ $config = [
      * Deployment commands.
      */
     'deploy_commands' => [
-        'cd {{local-repo}}',
-        'git reset --hard HEAD',
-        'git pull',
+        'cd {{local-repo}} && git reset --hard HEAD && git pull',
+        //'cd {{local-repo}} && sudo -u {{user}} git reset --hard HEAD && sudo -u {{user}} git pull',
     ],
     /**
      * Post-deploy commands to run.
      */
     'post_commands' => [
+        //'chmod 755 -R {{local-repo}}/storage',
     ],
     /**
      * If the repo is GitHub hosted, set to true, this will ensure
@@ -109,28 +109,37 @@ if ((!strpos($git_output, 'version')) && $config['debug']) {
 if (isset($_REQUEST['app'])) {
     if (isset($config['sites'][$_REQUEST['app']])) {
         $config = array_merge($config, $config['sites'][$_REQUEST['app']]);
-        echo "Deploying " . $_REQUEST['app'];
     }
     echo "The requested \"app\" configuration was not found!";
     exit;
 }
 
-//if($config['is_github']){
-//    
-//}
-//var_dump(getallheaders());
+$provided_key = isset($_REQUEST['key']) ? $_REQUEST['key'] : false;
+if ($config['key'] && ($config['key'] !== $provided_key)) {
+    echo "Authentication failed!";
+    exit;
+}
 
 $cmd_tags = [
     '{{local-repo}}' => $config['local_repo'],
-    '{{user}}' => $config['local_repo'],
+    '{{user}}' => $config['user'],
     '{{git-bin}}' => $config['git_bin'],
     '{{branch}}' => $config['branch'],
     '{{repo}}' => $config['remote_repo'],
 ];
 
-$command_array = [];
 foreach ($config['deploy_commands'] as $commands) {
     $command_array[] = str_replace(array_keys($cmd_tags), $cmd_tags, $commands);
 }
 
-var_dump($command_array);
+
+//if($config['is_github']){
+//    
+//}
+//var_dump(getallheaders());
+//var_dump($command_array);
+
+foreach ($command_array as $execute) {
+    shell_exec($execute);
+}
+echo "ok";
