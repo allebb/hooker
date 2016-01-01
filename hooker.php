@@ -11,6 +11,11 @@
 $config = [
 
     /**
+     * Set an opitional key for added protection.
+     * Example: qgW87T9RgJYKj2DucnChELXeJhLCFP8N
+     */
+    'key' => false,
+    /**
      * The remote repository to pull/checkout form.
      * Example: git@github.com:bobsta63/hooker.git
      */
@@ -25,9 +30,14 @@ $config = [
      */
     'debug' => false,
     /**
+     * Set a specific user to run the pre and post commands with (if false will run as the current user)
+     * Example: wwwdata
+     */
+    'sudo_as' => false,
+    /**
      * Pre-deploy commands to run.
      */
-    'post_commands' => [
+    'pre_commands' => [
     ],
     /**
      * Post-deploy commands to run.
@@ -38,6 +48,21 @@ $config = [
      * The path to the git binary.
      */
     'git_bin' => 'git',
+    /**
+     * Sites - If hositng a single instance of this script you can configure seperate "site" configurations below.
+     */
+    'sites' => [
+    //'my_example_website' => [
+    //    'key' => false,
+    //    'repo' => '',
+    //    'branch' => 'master',
+    //    'sudo_as' => false,
+    //    'pre_commands' => [
+    //    ],
+    //    'post_commands' => [
+    //    ],
+    //],
+    ],
 ];
 
 /**
@@ -60,7 +85,14 @@ if ((!function_exists('shell_exec')) && $config['debug']) {
 
 $git_output = shell_exec($config['git_bin'] . ' --version 2>&1');
 if ((!strpos($git_output, 'version')) && $config['debug']) {
-    echo "The 'git' binary was not found on your server!";
+    echo "The 'git' binary was not found or could not be executed on your server!";
     exit;
 }
 
+if (isset($_REQUEST['app'])) {
+    if (isset($config['sites'][$_REQUEST['app']])) {
+        echo "Deploying " . $_REQUEST['app'];
+    }
+    echo "The requested \"app\" configuration was not found!";
+    exit;
+}
