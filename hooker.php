@@ -60,6 +60,14 @@ $config = [
      */
     'is_github' => false,
     /**
+     * List of configured hooks that the code will deploy on (when using GitHub option)
+     * @see https://developer.github.com/webhooks/#payloads
+     */
+    'github_deploy_events' => [
+        'push',
+        'release',
+    ],
+    /**
      * The path to the git binary.
      */
     'git_bin' => 'git',
@@ -182,11 +190,15 @@ foreach (array_merge($config['pre_commands'], $config['deploy_commands'], $confi
     $command_array[] = str_replace(array_keys($cmd_tags), $cmd_tags, $commands);
 }
 
-//if($config['is_github']){
-//    
-//}
-//var_dump(getallheaders());
-//var_dump($command_array);
+if($config['is_github']){
+    $request_headers = getallheaders();
+    if(!isset($request_headers['X-Github-Event']) or !  in_array($request_headers['X-Github-Event'], $config['github_deploy_events'])){
+        if($config['debug']){
+            echo 'The GitHub hook event (' .$request_headers['X-Github-Event']. ') was not found in the github_deploy_events list.';
+            exit;
+        }
+    }
+}
 
 foreach ($command_array as $execute) {
     shell_exec($execute);
