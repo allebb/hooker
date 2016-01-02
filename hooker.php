@@ -9,7 +9,6 @@
  *
  */
 $config = [
-
     /**
      * Enable debug mode - Will output errors to the screen.
      */
@@ -21,7 +20,7 @@ $config = [
     'key' => false,
     /**
      * The remote repository to pull/checkout form.
-     * Example: git@github.com:bobsta63/hooker.git
+     * Example: git@github.com:bobsta63/test-website.git
      */
     'remote_repo' => '',
     /**
@@ -48,13 +47,12 @@ $config = [
      */
     'deploy_commands' => [
         'cd {{local-repo}} && git reset --hard HEAD && git pull',
-    //'cd {{local-repo}} && sudo -u {{user}} git reset --hard HEAD && sudo -u {{user}} git pull',
+        //'cd {{local-repo}} && sudo -u {{user}} git reset --hard HEAD && sudo -u {{user}} git pull',
     ],
     /**
      * Post-deploy commands to run.
      */
     'post_commands' => [
-    //'chmod 755 -R {{local-repo}}/storage',
     ],
     /**
      * If the repo is GitHub hosted, set to true, this will ensure
@@ -69,16 +67,45 @@ $config = [
      * Sites - If hositng a single instance of this script you can configure seperate "site" configurations below.
      */
     'sites' => [
-    //'my_example_website' => [
-    //    'key' => false,
-    //    'repo' => '',
-    //    'branch' => 'master',
-    //    'sudo_as' => false,
-    //    'pre_commands' => [
-    //    ],
-    //    'post_commands' => [
-    //    ],
-    //],
+        //// Example basic HTML website.
+        //'my_example_website' => [
+        //    'debug' => true, // Output debug info
+        //    'key' => 'SomeRandomWordThatMustBePresentInTheKeyParam',
+        //    'remote_repo' => 'git@github.com:bobsta63/test-website.git',
+        //    'local_repo' => '/var/www/html-website', // Use current directory
+        //    'branch' => 'master',
+        //    'user' => false,
+        //    'is_github' => true,
+        //    'pre_commands' => [
+        //      // Use the default (inheritated deployment commands)
+        //    ],
+        //    'deploy_commnads' => [
+        //      // Use the default (inheritated deployment commands)
+        //    ],
+        //   'post_commands' => [
+        //      // Use the default (inheritated deployment commands)
+        //    ],
+        //],
+        // // Example Laravel Deployment Configuration.
+        //'my_other_website' => [
+        //    'key' => '32c9f55eea8526374731acca13c81aca',
+        //    'remote_repo' => 'git@github.com:bobsta63/my-other-website-repo.git',
+        //    'local_repo' => '/var/www/my-other-website',
+        //    'branch' => 'deploy-live',
+        //    'user' => false,
+        //    'pre_commands' => [
+        //        'php {{local-repo}}/artisan down',
+        //    ],
+        //    'deploy_commnads' => [
+        //         // Use the default (inheritated deployment commands)
+        //    ],
+        //   'post_commands' => [
+        //        'cd {{local-repo}} && composer insall',
+        //        'chmod 755 {{local-repo}}/storage',
+        //        'php {{local-repo}}/artisan migrate --force',
+        //        'php {{local-repo}}/artisan down',
+        //    ],
+        //],
     ],
 ];
 
@@ -95,8 +122,8 @@ if ($config['debug']) {
     var_dump($config);
 }
 
-if (file_exists('hooker.conf.php')) {
-    $config_file = require_once 'hooker.conf.php';
+if (file_exists(__DIR__ . '/hooker.conf.php')) {
+    $config_file = require_once __DIR__ . '/hooker.conf.php';
     $config = array_merge($config, $config_file);
     if ($config['debug']) {
         echo 'Loading configuration from configuration override file (hooker.conf.php), new configuration:';
@@ -117,10 +144,24 @@ if ((!strpos($git_output, 'version')) && $config['debug']) {
 
 if (isset($_REQUEST['app'])) {
     if (isset($config['sites'][$_REQUEST['app']])) {
-        $config = array_merge($config, $config['sites'][$_REQUEST['app']]);
+        $config = array_merge([
+            'debug' => $config['debug'],
+            'key' => $config['key'],
+            'user' => $config['user'],
+            'git_bin' => $config['git_bin'],
+            'pre_commands' => $config['pre_commands'],
+            'deploy_commands' => $config['deploy_commands'],
+            'post_commands' => $config['post_commands'],
+            ], $config['sites'][$_REQUEST['app']]
+        );
+        if ($config['debug']) {
+            echo 'Application specific configurtion, new configuration:';
+            var_dump($config);
+        }
+    } else {
+        echo 'The requested site/application (' . $_REQUEST['app'] . ') configuration was not found!';
+        exit;
     }
-    echo "The requested \"app\" configuration was not found!";
-    exit;
 }
 
 $provided_key = isset($_REQUEST['key']) ? $_REQUEST['key'] : false;
