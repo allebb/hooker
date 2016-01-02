@@ -47,7 +47,7 @@ $config = [
      */
     'deploy_commands' => [
         'cd {{local-repo}} && git reset --hard HEAD && git pull',
-        //'cd {{local-repo}} && sudo -u {{user}} git reset --hard HEAD && sudo -u {{user}} git pull',
+    //'cd {{local-repo}} && sudo -u {{user}} git reset --hard HEAD && sudo -u {{user}} git pull',
     ],
     /**
      * Post-deploy commands to run.
@@ -75,45 +75,45 @@ $config = [
      * Sites - If hositng a single instance of this script you can configure seperate "site" configurations below.
      */
     'sites' => [
-        //// Example basic HTML website.
-        //'my_example_website' => [
-        //    'debug' => true, // Output debug info
-        //    'key' => 'SomeRandomWordThatMustBePresentInTheKeyParam',
-        //    'remote_repo' => 'git@github.com:bobsta63/test-website.git',
-        //    'local_repo' => '/var/www/html-website', // Use current directory
-        //    'branch' => 'master',
-        //    'user' => false,
-        //    'is_github' => true,
-        //    'pre_commands' => [
-        //      // Use the default (inheritated deployment commands)
-        //    ],
-        //    'deploy_commnads' => [
-        //      // Use the default (inheritated deployment commands)
-        //    ],
-        //   'post_commands' => [
-        //      // Use the default (inheritated deployment commands)
-        //    ],
-        //],
-        // // Example Laravel Deployment Configuration.
-        //'my_other_website' => [
-        //    'key' => '32c9f55eea8526374731acca13c81aca',
-        //    'remote_repo' => 'git@github.com:bobsta63/my-other-website-repo.git',
-        //    'local_repo' => '/var/www/my-other-website',
-        //    'branch' => 'deploy-live',
-        //    'user' => false,
-        //    'pre_commands' => [
-        //        'php {{local-repo}}/artisan down',
-        //    ],
-        //    'deploy_commnads' => [
-        //         // Use the default (inheritated deployment commands)
-        //    ],
-        //   'post_commands' => [
-        //        'cd {{local-repo}} && composer insall',
-        //        'chmod 755 {{local-repo}}/storage',
-        //        'php {{local-repo}}/artisan migrate --force',
-        //        'php {{local-repo}}/artisan down',
-        //    ],
-        //],
+    //// Example basic HTML website.
+    //'my_example_website' => [
+    //    'debug' => true, // Output debug info
+    //    'key' => 'SomeRandomWordThatMustBePresentInTheKeyParam',
+    //    'remote_repo' => 'git@github.com:bobsta63/test-website.git',
+    //    'local_repo' => '/var/www/html-website', // Use current directory
+    //    'branch' => 'master',
+    //    'user' => false,
+    //    'is_github' => true,
+    //    'pre_commands' => [
+    //      // Use the default (inheritated deployment commands)
+    //    ],
+    //    'deploy_commnads' => [
+    //      // Use the default (inheritated deployment commands)
+    //    ],
+    //   'post_commands' => [
+    //      // Use the default (inheritated deployment commands)
+    //    ],
+    //],
+    // // Example Laravel Deployment Configuration.
+    //'my_other_website' => [
+    //    'key' => '32c9f55eea8526374731acca13c81aca',
+    //    'remote_repo' => 'git@github.com:bobsta63/my-other-website-repo.git',
+    //    'local_repo' => '/var/www/my-other-website',
+    //    'branch' => 'deploy-live',
+    //    'user' => false,
+    //    'pre_commands' => [
+    //        'php {{local-repo}}/artisan down',
+    //    ],
+    //    'deploy_commnads' => [
+    //         // Use the default (inheritated deployment commands)
+    //    ],
+    //   'post_commands' => [
+    //        'cd {{local-repo}} && composer insall',
+    //        'chmod 755 {{local-repo}}/storage',
+    //        'php {{local-repo}}/artisan migrate --force',
+    //        'php {{local-repo}}/artisan down',
+    //    ],
+    //],
     ],
 ];
 
@@ -157,6 +157,8 @@ if (isset($_REQUEST['app'])) {
             'key' => $config['key'],
             'user' => $config['user'],
             'git_bin' => $config['git_bin'],
+            'is_github' => $config['is_github'],
+            'github_deploy_events' => $config['github_deploy_events'],
             'pre_commands' => $config['pre_commands'],
             'deploy_commands' => $config['deploy_commands'],
             'post_commands' => $config['post_commands'],
@@ -190,11 +192,11 @@ foreach (array_merge($config['pre_commands'], $config['deploy_commands'], $confi
     $command_array[] = str_replace(array_keys($cmd_tags), $cmd_tags, $commands);
 }
 
-if($config['is_github']){
+if ($config['is_github']) {
     $request_headers = getallheaders();
-    if(!isset($request_headers['X-Github-Event']) or !  in_array($request_headers['X-Github-Event'], $config['github_deploy_events'])){
-        if($config['debug']){
-            echo 'The GitHub hook event (' .$request_headers['X-Github-Event']. ') was not found in the github_deploy_events list.';
+    if ((!isset($request_headers['X-Github-Event'])) or (!in_array($request_headers['X-Github-Event'], $config['github_deploy_events']))) {
+        if ($config['debug']) {
+            echo 'The GitHub hook event (' . $request_headers['X-Github-Event'] . ') was not found in the github_deploy_events list.';
             exit;
         }
     }
