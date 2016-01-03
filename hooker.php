@@ -160,6 +160,8 @@ if (isset($_REQUEST['app'])) {
             'git_bin' => $config['git_bin'],
             'is_github' => $config['is_github'],
             'github_deploy_events' => $config['github_deploy_events'],
+            'is_bitbucket' => $config['is_bitbucket'],
+            'bitbucket_deploy_events' => $config['bitbucket_deploy_events'],
             'pre_commands' => $config['pre_commands'],
             'deploy_commands' => $config['deploy_commands'],
             'post_commands' => $config['post_commands'],
