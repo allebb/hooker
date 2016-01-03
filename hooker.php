@@ -137,20 +137,20 @@ handlePingRequest();
 if (file_exists(__DIR__ . '/hooker.conf.php')) {
     $config_file = require_once __DIR__ . '/hooker.conf.php';
     $config = array_merge($config, $config_file);
-    log("Loading configuration from configuration override file (hooker.conf.php)", $config['debug']);
+    debugLog("Loading configuration from configuration override file (hooker.conf.php)", $config['debug']);
 }
 
 if ((!function_exists('shell_exec'))) {
-    log("The PHP function shell_exec() does not exist, aborting deployment!", $config['debug']);
+    debugLog("The PHP function shell_exec() does not exist, aborting deployment!", $config['debug']);
     exit;
 }
 
 $git_output = shell_exec($config['git_bin'] . ' --version 2>&1');
 if ((!strpos($git_output, 'version'))) {
-    log("The 'git' binary was not found or could not be executed on your server, aborting deployment!", $config['debug']);
+    debugLog("The 'git' binary was not found or could not be executed on your server, aborting deployment!", $config['debug']);
     exit;
 }
-log("Git version detected: {$git_output}", $config['debug']);
+debugLog("Git version detected: {$git_output}", $config['debug']);
 
 if (isset($_REQUEST['app'])) {
     if (isset($config['sites'][$_REQUEST['app']])) {
@@ -168,9 +168,9 @@ if (isset($_REQUEST['app'])) {
             'post_commands' => $config['post_commands'],
             ], $config['sites'][$_REQUEST['app']]
         );
-        log("Application specific configurtion detected and being used!", $config['debug']);
+        debugLog("Application specific configurtion detected and being used!", $config['debug']);
     } else {
-        log("The requested site/application ({$_REQUEST['app']}) configuration was not found!'", $config['debug']);
+        debugLog("The requested site/application ({$_REQUEST['app']}) configuration was not found!'", $config['debug']);
         exit;
     }
 }
@@ -179,21 +179,22 @@ checkKeyAuth($config);
 
 if ($config['is_github']) {
     if (!in_array(requestHeader('X-Github-Event'), $config['github_deploy_events'])) {
-        log("The GitHub hook event (" . requestHeader('X-Github-Event') . ") was not found in the github_deploy_events list, aborting the deployment!", $config['debug']);
+        debugLog("The GitHub hook event (" . requestHeader('X-Github-Event') . ") was not found in the github_deploy_events list, aborting the deployment!", $config['debug']);
         exit;
     }
 }
 
 if ($config['is_bitbucket']) {
     if (!in_array(requestHeader('X-Event-Key'), $config['bitbucket_deploy_events'])) {
-        log("The BitBucket hook event (" . requestHeader('X-Event-Key') . ") was not found in the 'bitbucket_deploy_events' list, aborting the deployment!", $config['debug']);
+        debugLog("The BitBucket hook event (" . requestHeader('X-Event-Key') . ") was not found in the 'bitbucket_deploy_events' list, aborting the deployment!", $config['debug']);
         exit;
     }
 }
 
 foreach (replaceCommandPlaceHolders($config) as $execute) {
-    shell_exec($execute);
-    log("Executing command {$execute}", $config['debug']);
+    $exec_output = shell_exec($execute . ' 2>&1');
+    debugLog("Executing command {$execute}", $config['debug']);
+    debugLog($exec_output, $config);
 }
 echo "done";
 
@@ -212,7 +213,7 @@ function handlePingRequest()
  * Log messages out to the user.
  * @param string $message
  */
-function log($message, $output = false)
+function debugLog($message, $output = false)
 {
     if ($output) {
         echo date("c") . ' - ' . $message . PHP_EOL;
