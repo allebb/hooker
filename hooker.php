@@ -170,6 +170,7 @@ if (isset($_REQUEST['app'])) {
             'github_deploy_events' => $config['github_deploy_events'],
             'is_bitbucket' => $config['is_bitbucket'],
             'bitbucket_deploy_events' => $config['bitbucket_deploy_events'],
+            'ip_whitelist' => $config['ip_whitelist'],
             'pre_commands' => $config['pre_commands'],
             'deploy_commands' => $config['deploy_commands'],
             'post_commands' => $config['post_commands'],
