@@ -150,6 +150,7 @@ if ((!strpos($git_output, 'version'))) {
     log("The 'git' binary was not found or could not be executed on your server, aborting deployment!", $config['debug']);
     exit;
 }
+log("Git version detected: {$git_output}", $config['debug']);
 
 if (isset($_REQUEST['app'])) {
     if (isset($config['sites'][$_REQUEST['app']])) {
