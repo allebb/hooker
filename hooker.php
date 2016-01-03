@@ -68,6 +68,18 @@ $config = [
         'release',
     ],
     /**
+     * If the repo is BitBucket hosted, set to true, this will ensure
+     * web-hook is only executed on configured events..
+     */
+    'is_bitbucket' => false,
+    /**
+     * List of configured hooks that the code will deploy on (when using GitHub option)
+     * @see https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html#EventPayloads-RepositoryEvents
+     */
+    'bitbucket_deploy_events' => [
+        'repo:push',
+    ],
+    /**
      * The path to the git binary.
      */
     'git_bin' => 'git',
@@ -202,6 +214,16 @@ if ($config['is_github']) {
     }
 }
 
+if ($config['is_bitbucket']) {
+    $request_headers = getallheaders();
+    if ((!isset($request_headers['X-Event-Key'])) or (!in_array($request_headers['X-Event-Key'], $config['bitbucket_deploy_events']))) {
+        if ($config['debug']) {
+            echo 'The BitBucket hook event (' . $request_headers['bitbucket_deploy_events'] . ') was not found in the bitbucket_deploy_events list.';
+            exit;
+        }
+    }
+}
+
 foreach ($command_array as $execute) {
     shell_exec($execute);
     if ($config['debug']) {
@@ -209,3 +231,4 @@ foreach ($command_array as $execute) {
     }
 }
 echo "ok";
+
