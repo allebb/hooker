@@ -3,7 +3,7 @@
  * Hooker Configuration File
  */
 return [
-    'debug' => true,
+    'debug' => false,
     //'sites' => [
     //// Example basic HTML website.
     //'my_example_website' => [
