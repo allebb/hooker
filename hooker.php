@@ -192,9 +192,9 @@ if ($config['is_bitbucket']) {
 }
 
 foreach (replaceCommandPlaceHolders($config) as $execute) {
-    $exec_output = shell_exec($execute);
+    $exec_output = shell_exec($execute, ' 2>&1');
     debugLog("Executing command {$execute}", $config['debug']);
-    debugLog($exec_output, $config);
+    debugLog($exec_output, $config['debug']);
 }
 echo "done";
 
