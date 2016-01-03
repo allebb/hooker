@@ -47,7 +47,7 @@ $config = [
      */
     'deploy_commands' => [
         'cd {{local-repo}} && git reset --hard HEAD && git pull',
-        //'cd {{local-repo}} && sudo -u {{user}} git reset --hard HEAD && sudo -u {{user}} git pull',
+    //'cd {{local-repo}} && sudo -u {{user}} git reset --hard HEAD && sudo -u {{user}} git pull',
     ],
     /**
      * Post-deploy commands to run.
@@ -132,10 +132,7 @@ $config = [
 /**
  * End or user configuration - It is not recommended that you edit below this line!
  */
-if (isset($_REQUEST['ping'])) {
-    echo 'PONG';
-    exit;
-}
+handlePingRequest();
 
 if (file_exists(__DIR__ . '/hooker.conf.php')) {
     $config_file = require_once __DIR__ . '/hooker.conf.php';
@@ -196,6 +193,17 @@ foreach (replaceCommandPlaceHolders($config) as $execute) {
     log("Executing {{$execute}}", $config['debug']);
 }
 echo "ok";
+
+/**
+ * Responds to the PING request if requested.
+ */
+function handlePingRequest()
+{
+    if (isset($_REQUEST['ping'])) {
+        echo 'PONG';
+        exit;
+    }
+}
 
 /**
  * Log messages out to the user.
