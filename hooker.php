@@ -141,13 +141,13 @@ if (file_exists(__DIR__ . '/hooker.conf.php')) {
 }
 
 if ((!function_exists('shell_exec'))) {
-    log("The PHP function shell_exec() does not exist!", $config['debug']);
+    log("The PHP function shell_exec() does not exist, aborting deployment!", $config['debug']);
     exit;
 }
 
 $git_output = shell_exec($config['git_bin'] . ' --version 2>&1');
 if ((!strpos($git_output, 'version'))) {
-    log("The 'git' binary was not found or could not be executed on your server!", $config['debug']);
+    log("The 'git' binary was not found or could not be executed on your server, aborting deployment!", $config['debug']);
     exit;
 }
 
@@ -178,23 +178,23 @@ checkKeyAuth($config);
 
 if ($config['is_github']) {
     if (!in_array(requestHeader('X-Github-Event'), $config['github_deploy_events'])) {
-        log("The GitHub hook event (" . requestHeader('X-Github-Event') . ") was not found in the github_deploy_events list.", $config['debug']);
+        log("The GitHub hook event (" . requestHeader('X-Github-Event') . ") was not found in the github_deploy_events list, aborting the deployment!", $config['debug']);
         exit;
     }
 }
 
 if ($config['is_bitbucket']) {
     if (!in_array(requestHeader('X-Event-Key'), $config['bitbucket_deploy_events'])) {
-        log("The BitBucket hook event (" . requestHeader('X-Event-Key') . ") was not found in the 'bitbucket_deploy_events' list.", $config['debug']);
+        log("The BitBucket hook event (" . requestHeader('X-Event-Key') . ") was not found in the 'bitbucket_deploy_events' list, aborting the deployment!", $config['debug']);
         exit;
     }
 }
 
 foreach (replaceCommandPlaceHolders($config) as $execute) {
     shell_exec($execute);
-    log("Executing {{$execute}}", $config['debug']);
+    log("Executing command {$execute}", $config['debug']);
 }
-echo "ok";
+echo "done";
 
 /**
  * Responds to the PING request if requested.
@@ -214,7 +214,7 @@ function handlePingRequest()
 function log($message, $output = false)
 {
     if ($output) {
-        echo date("c") . ' - ' . $message;
+        echo date("c") . ' - ' . $message . PHP_EOL;
     }
 }
 
