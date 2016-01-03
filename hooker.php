@@ -47,7 +47,7 @@ $config = [
      */
     'deploy_commands' => [
         'cd {{local-repo}} && git reset --hard HEAD && git pull',
-    //'cd {{local-repo}} && sudo -u {{user}} git reset --hard HEAD && sudo -u {{user}} git pull',
+        //'cd {{local-repo}} && sudo -u {{user}} git reset --hard HEAD && sudo -u {{user}} git pull',
     ],
     /**
      * Post-deploy commands to run.
@@ -137,28 +137,20 @@ if (isset($_REQUEST['ping'])) {
     exit;
 }
 
-if ($config['debug']) {
-    echo 'Loading configuration:';
-    var_dump($config);
-}
-
 if (file_exists(__DIR__ . '/hooker.conf.php')) {
     $config_file = require_once __DIR__ . '/hooker.conf.php';
     $config = array_merge($config, $config_file);
-    if ($config['debug']) {
-        echo 'Loading configuration from configuration override file (hooker.conf.php), new configuration:';
-        var_dump($config);
-    }
+    log("Loading configuration from configuration override file (hooker.conf.php)", $config['debug']);
 }
 
-if ((!function_exists('shell_exec')) && $config['debug']) {
-    echo 'The PHP function shell_exec() does not exist!';
+if ((!function_exists('shell_exec'))) {
+    log("The PHP function shell_exec() does not exist!", $config['debug']);
     exit;
 }
 
 $git_output = shell_exec($config['git_bin'] . ' --version 2>&1');
-if ((!strpos($git_output, 'version')) && $config['debug']) {
-    echo "The 'git' binary was not found or could not be executed on your server!";
+if ((!strpos($git_output, 'version'))) {
+    log("The 'git' binary was not found or could not be executed on your server!", $config['debug']);
     exit;
 }
 
@@ -176,59 +168,90 @@ if (isset($_REQUEST['app'])) {
             'post_commands' => $config['post_commands'],
             ], $config['sites'][$_REQUEST['app']]
         );
-        if ($config['debug']) {
-            echo 'Application specific configurtion, new configuration:';
-            var_dump($config);
-        }
+        log("Application specific configurtion detected and being used!", $config['debug']);
     } else {
-        echo 'The requested site/application (' . $_REQUEST['app'] . ') configuration was not found!';
+        log("The requested site/application ({$_REQUEST['app']}) configuration was not found!'", $config['debug']);
         exit;
     }
 }
 
-$provided_key = isset($_REQUEST['key']) ? $_REQUEST['key'] : false;
-if ($config['key'] && ($config['key'] !== $provided_key)) {
-    echo "Authentication failed!";
-    exit;
-}
-
-$cmd_tags = [
-    '{{local-repo}}' => $config['local_repo'],
-    '{{user}}' => $config['user'],
-    '{{git-bin}}' => $config['git_bin'],
-    '{{branch}}' => $config['branch'],
-    '{{repo}}' => $config['remote_repo'],
-];
-
-foreach (array_merge($config['pre_commands'], $config['deploy_commands'], $config['post_commands']) as $commands) {
-    $command_array[] = str_replace(array_keys($cmd_tags), $cmd_tags, $commands);
-}
+checkKeyAuth($config);
 
 if ($config['is_github']) {
-    $request_headers = getallheaders();
-    if ((!isset($request_headers['X-Github-Event'])) or (!in_array($request_headers['X-Github-Event'], $config['github_deploy_events']))) {
-        if ($config['debug']) {
-            echo 'The GitHub hook event (' . $request_headers['X-Github-Event'] . ') was not found in the github_deploy_events list.';
-            exit;
-        }
+    if (!in_array(requestHeader('X-Github-Event'), $config['github_deploy_events'])) {
+        log("The GitHub hook event (" . requestHeader('X-Github-Event') . ") was not found in the github_deploy_events list.", $config['debug']);
+        exit;
     }
 }
 
 if ($config['is_bitbucket']) {
-    $request_headers = getallheaders();
-    if ((!isset($request_headers['X-Event-Key'])) or (!in_array($request_headers['X-Event-Key'], $config['bitbucket_deploy_events']))) {
-        if ($config['debug']) {
-            echo 'The BitBucket hook event (' . $request_headers['bitbucket_deploy_events'] . ') was not found in the bitbucket_deploy_events list.';
-            exit;
-        }
+    if (!in_array(requestHeader('X-Event-Key'), $config['bitbucket_deploy_events'])) {
+        log("The BitBucket hook event (" . requestHeader('X-Event-Key') . ") was not found in the 'bitbucket_deploy_events' list.", $config['debug']);
+        exit;
     }
 }
 
-foreach ($command_array as $execute) {
+foreach (replaceCommandPlaceHolders($config) as $execute) {
     shell_exec($execute);
-    if ($config['debug']) {
-        echo "Running: " . $execute;
-    }
+    log("Executing {{$execute}}", $config['debug']);
 }
 echo "ok";
 
+/**
+ * Log messages out to the user.
+ * @param string $message
+ */
+function log($message, $output = false)
+{
+    if ($output) {
+        echo date("c") . ' - ' . $message;
+    }
+}
+
+/**
+ * Retrieve a request header key.
+ * @param string $key The header key to return the value for.
+ * @param mixed $default Optional default return value.
+ * @return string
+ */
+function requestHeader($key, $default = false)
+{
+    $request_headers = getallheaders();
+    if (isset($request_headers[$key])) {
+        return $request_headers[$key];
+    }
+    return $default;
+}
+
+/**
+ * In-line replacement of command tags.
+ * @param array $config The configuration input array.
+ * @return array The prepared command array.
+ */
+function replaceCommandPlaceHolders($config)
+{
+    $cmd_tags = [
+        '{{local-repo}}' => $config['local_repo'],
+        '{{user}}' => $config['user'],
+        '{{git-bin}}' => $config['git_bin'],
+        '{{branch}}' => $config['branch'],
+        '{{repo}}' => $config['remote_repo'],
+    ];
+    foreach (array_merge($config['pre_commands'], $config['deploy_commands'], $config['post_commands']) as $commands) {
+        $command_array[] = str_replace(array_keys($cmd_tags), $cmd_tags, $commands);
+    }
+    return $command_array;
+}
+
+/**
+ * Checks Key Parameter
+ * @return void
+ */
+function checkKeyAuth($config)
+{
+    $provided_key = isset($_REQUEST['key']) ? $_REQUEST['key'] : false;
+    if ($config['key'] && ($config['key'] !== $provided_key)) {
+        echo "Authentication failed!";
+        exit;
+    }
+}
