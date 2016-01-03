@@ -80,6 +80,13 @@ $config = [
         'repo:push',
     ],
     /**
+     * Configurable whitelist of IP addresses that are allowed to trigger deployments.
+     */
+    'ip_whitelist' => [
+        '127.0.0.1',
+        '::1',
+    ],
+    /**
      * The path to the git binary.
      */
     'git_bin' => 'git',
@@ -175,6 +182,7 @@ if (isset($_REQUEST['app'])) {
     }
 }
 
+checkIpAuth($config);
 checkKeyAuth($config);
 
 if ($config['is_github']) {
@@ -263,7 +271,21 @@ function checkKeyAuth($config)
 {
     $provided_key = isset($_REQUEST['key']) ? $_REQUEST['key'] : false;
     if ($config['key'] && ($config['key'] !== $provided_key)) {
-        echo "Authentication failed!";
+        echo "Key auth failed!";
         exit;
     }
+}
+
+function checkIpAuth($config)
+{
+    $remote_ip = $_SERVER['REMOTE_ADDR'];
+    if (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+        $remote_ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+    }
+    if ((count($config['ip_whitelist']) > 0) && (!in_array($remote_ip, $config['ip_whitelist']))) {
+        debugLog("IP ({$remote_ip}) is not permitted on the whitelist, aborting deloyment!", $config['debug']);
+        echo "IP whitelist pass failed!";
+        exit;
+    }
+    debugLog("IP ({$remote_ip}) authorised by whitelist.", $config['debug']);
 }
