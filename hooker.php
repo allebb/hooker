@@ -187,6 +187,7 @@ checkIpAuth($config);
 checkKeyAuth($config);
 
 if ($config['is_github']) {
+    debugLog("Repository flagged as GitHub hosted.", $config['debug']);
     if (!in_array(requestHeader('X-Github-Event'), $config['github_deploy_events'])) {
         debugLog("The GitHub hook event (" . requestHeader('X-Github-Event') . ") was not found in the github_deploy_events list, aborting the deployment!", $config['debug']);
         exit;
@@ -194,6 +195,7 @@ if ($config['is_github']) {
 }
 
 if ($config['is_bitbucket']) {
+    debugLog("Repository flagged as BitBucket hosted.", $config['debug']);
     if (!in_array(requestHeader('X-Event-Key'), $config['bitbucket_deploy_events'])) {
         debugLog("The BitBucket hook event (" . requestHeader('X-Event-Key') . ") was not found in the 'bitbucket_deploy_events' list, aborting the deployment!", $config['debug']);
         exit;
@@ -275,6 +277,7 @@ function checkKeyAuth($config)
         echo "Key auth failed!";
         exit;
     }
+    debugLog("Key Auth successful", $config['debug']);
 }
 
 function checkIpAuth($config)
