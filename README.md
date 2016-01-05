@@ -1,8 +1,26 @@
 # Hooker
 
-A simple (single file) script to be used as a web-hook for trigger application deployments with Git.
+A standalone PHP web-hook script for triggering application deployments with Git.
+
+## Requirements
+
+* PHP 5.4+.
+* The ``shell_exec()`` function is required (not always possible on some shared hosting environments)
+
+## License
+
+This script is released under the [GPLv2](https://github.com/bobsta63/hooker/blob/master/LICENSE) license.
+
+# Bugs
+
+Please report any bugs on the Issue Tracker, please ensure that bug reports are clear and contain as much information as possible, these will be looked at and resolved as soon as possible!
 
 ## Installation
+
+You can "install" and utilise this script in two ways:
+
+* Include ``hooker.php`` in your existing projects' root directory and update the configuration array.
+* Host as a separate virtual host and configure multiple "site" configurations.
 
 This script is designed to be downloaded as a single file and run within your current website/application's root directory, 
 it is recommended that you simply download the main script in this repository on a per site basis, on a Linux based server you
