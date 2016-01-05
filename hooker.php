@@ -3,10 +3,10 @@
  * Hooker - A single file web-hook deployment tool.
  *
  * @author Bobby Allen <bobbyallen.uk@gmail.com>
+ * @license http://opensource.org/licenses/GPL-2.0
  * @link https://github.com/bobsta63/hooker
  * @link https://github.com/bobsta63/hooker/issues
- * @license http://opensource.org/licenses/GPL-2.0
- *
+ * 
  */
 $config = [
     /**
@@ -21,11 +21,13 @@ $config = [
     /**
      * The remote repository to pull/checkout form.
      * Example: git@github.com:bobsta63/test-website.git
+     * @todo Project currently does not make use of this setting but is reserved for future functionality.
      */
     'remote_repo' => '',
     /**
      * Which branch to pull/checkout from.
      * Example: master
+     * @todo Project currently does not make use of this setting but is reserved for future functionality.
      */
     'branch' => 'master',
     /**
@@ -137,7 +139,11 @@ $config = [
 ];
 
 /**
- * End or user configuration - It is not recommended that you edit below this line!
+ * 
+*  ////////////////////////////////////////////////////////////////////////////////////// *
+ * // End or user configuration - It is not recommended that you edit below this line! // *
+ * ////////////////////////////////////////////////////////////////////////////////////// *
+ * 
  */
 handlePingRequest();
 
