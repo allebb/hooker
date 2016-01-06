@@ -73,101 +73,137 @@ The following configuration options exists and are explained below:
 ### debug
 
 Type: ``boolean``
+
 Default: false
+
 Description: When set to __true__ debug information will be outputted to the browser.
 
 ### key
 
 Type: ``string``
+
 Default: false
+
 Description: When not set as ``false``, this string must match the ``key`` parameter when calling the webhook, can can be set globally (for all sites) or, set it individually on a per-site basis.
+
 Example: ``TPuR81cS0gwP2T``
 
 ### remote_repo
 
 Type: ``string``
+
 Default: empty
+
 Description: This is currently not used but is reserved for future implementation.
+
 Example: ``git@github.com:bobsta63/test-website.git``
 
 ### branch
 
 Type: ``string``
+
 Default: master
+
 Description: This is currently not used but is reserved for future implementation.
+
 Example: deploy-live
 
 ### local_repo
 
 Type: ``string``
+
 Default: __DIR__
+
 Description: Sets the local repository URL (where to run the Git commands from, by default ``__DIR__`` uses the same directory as the hooker.php file) and therefore, out of the box this is configured for single site deployments.
 
 ### user
 
 Type: ``string``
+
 Default: false
+
 Description: When set, the {{ user }} tag can be used in commands when you require to ``sudo -u (user)``, the user that the script runs under (eg. ``www-data``) must be configured for sudo rights in the ``/etc/sudoers`` file if you requre to use this feature..
+
 Example: root
 
 ### pre_commands
 
 Type: ``array``
+
 Default: []
+
 Description: Array of commands to execute before running the ``deploy_commands``, you can use the in-line tag replacements for dynamic replacements.
 
 ### deploy_commands
 
 Type: ``array``
+
 Default: ['cd {{local-repo}} && git reset --hard HEAD && git pull'],
+
 Description: Array of commands to execute on execution of the script, you can use the in-line tag replacements for dynamic replacements.
 
 ### post_commands
 
 Type: ``array``
+
 Default: []
+
 Description: Array of commands to execute after running the ``deploy_commands``, you can use the in-line tag replacements for dynamic replacements.
 
 ### is_github
 
 Type: ``boolean``
+
 Default: false
+
 Description: If set, this will ensure that the hook only deploys the code on the configured GitHub hook events in order to minimise unnecessary application downtime, bandwidth and server resources.
 
 ### github_deploy_events
 
 Type: ``array``
+
 Default: ['push', 'release']
+
 Description: List of configured hook event headers that the code will deploy on (when using the ``is_github`` option is enabled)
 
 ### is_bitbucket
 
 Type: ``boolean``
+
 Default: false
+
 Description: If set, this will ensure that the hook only deploys the code on the configured BitBucket hook events in order to minimise unnecessary application downtime, bandwidth and server resources.
 
 ### bitbucket_deploy_events
 
 Type: ``array``
+
 Default: ['repo:push']
+
 Description: List of configured hook event headers that the code will deploy on (when using the ``is_bitbucket`` option is enabled)
 
 ### ip_whitelist
 
 Type: ``array``
+
 Default: ['127.0.0.1', '::1']
+
 Description: A whitelist of IP addresses that are allowed to invoke a deployment.
 
 ### git_bin
 
 Type: ``string``
+
 Default: git
+
 Description: The full path to the Git binary on the server (if your PATH is set correctly, the default ``git`` should work fine!)
 
 ### sites
 
 Type: ``array``
+
 Default: []
+
 Description: Enables per-site configuration override.
 
 ## Configuring Services to use Hooker 
