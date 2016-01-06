@@ -26,15 +26,9 @@ You can "install" and utilise this script in two ways:
 
 ### Single Site Installation (Single site configuration)
 
-The single site installation involves installing Hooker.php (and optional separate configuration file) into the public root of existing website/application.
+The single site installation involves hosting the ``Hooker.php`` file (and an optional separate configuration file) in the public root of an existing website/application.
 
-### Virtual Host Installation (Multiple site configuration)
-
-The virtual host installation involves creating a new web server virtual host of which then acts as a deployment 
-
-This script is designed to be downloaded as a single file and run within your current website/application's root directory, 
-it is recommended that you simply download the main script in this repository on a per site basis, on a Linux based server you
-can change into your site's root directory and download using ``cURL`` or ``wget`` like so:
+To download the latest stable version of the script, use ``wget`` to download it as follows:
 
 ```shell
 cd /var/www/{your web project}
@@ -50,19 +44,46 @@ If the script is available to the internet you should receive a 200 response and
 
 Now that you have it working, you now need to configure it for your purposes.
 
-## Configuration
+If you intend on just using the ``hooker.php`` file and do not intend on using a separate configuration file then you should edit the ``hooker.php`` file and edit the ``$config`` array found at the top of the file.
 
-To ensure that the script has a smallest foot print as possible you can configure the settings either in the head of ``hooker.php`` so
-that you only have a single file present on your server or, and as recommended create a separate configuration file (to enable easier
- upgrades in future).
+It is recommended that you create and manage a separate configuration file that will be used when present, the benefits of which will enable you to update the hooker.php file reguarly without having to re-enter your configuration settings each time but does come at the cost of having another non-project file in the root of your application/site.
 
-The configuration details are documented below.
+You can download the example configuration file and edit to your requirements as follows:
 
-### Using with GitHub web hooks
+```shell
+cd /var/www/{your web project}
+wget https://raw.githubusercontent.com/bobsta63/hooker/stable/hooker.conf.php
+```
+
+When the ``hooker.conf.php`` file is present the, configuration file (``hooker.conf.php``) will __merge__ with the default configuration found at the top of the ``hooker.php`` file therefore you only need to override settings and not duplicate.
+
+### Virtual Host Installation (Multiple site configuration)
+
+The virtual host installation involves creating a new web server virtual host of which then acts as a web-hook endpoint for multiple projects.
+
+When using this method, you should create separate site configurations that then get triggered by specifing the site/app configuration with the ``app`` parameter.
+
+A benefit of using the Multiple site configuration over the single site configuration is the ability to utilise Git to keep Hooker updated periodically.
 
 TBC
 
-### Using with BitBucket web hooks
+
+## Configuration options
+
+The following configuration options exists and are explained below:
+
+
+
+
+## Configuring Services to use Hooker 
+
+The following examples shows how to setup web-hooks to trigger deployments from a couple of the most used Git hosting services.
+
+### Configuring Hooker with GitHub web-hooks
+
+TBC
+
+### Configuring Hooker with BitBucket web-hooks
 
 TBC
 
