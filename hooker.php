@@ -2,7 +2,7 @@
 /**
  * Hooker - A single file web-hook deployment tool.
  *
- * @author Bobby Allen <bobbyallen.uk@gmail.com>
+ * @author Bobby Allen <ballen@bobbyallen.me>
  * @license http://opensource.org/licenses/GPL-2.0
  * @link https://github.com/bobsta63/hooker
  * @link https://github.com/bobsta63/hooker/issues
@@ -140,7 +140,7 @@ $config = [
 
 /**
  * 
-*  ////////////////////////////////////////////////////////////////////////////////////// *
+ *  ////////////////////////////////////////////////////////////////////////////////////// *
  * // End or user configuration - It is not recommended that you edit below this line! // *
  * ////////////////////////////////////////////////////////////////////////////////////// *
  * 
@@ -165,8 +165,9 @@ if ((!strpos($git_output, 'version'))) {
 }
 debugLog("Git version detected: {$git_output}", $config['debug']);
 
-if (isset($_REQUEST['app'])) {
-    if (isset($config['sites'][$_REQUEST['app']])) {
+$application = ($_GET['app']) ? $_GET['app'] : false;
+if ($application) {
+    if (isset($config['sites'][$application])) {
         $config = array_merge([
             'debug' => $config['debug'],
             'key' => $config['key'],
@@ -180,11 +181,11 @@ if (isset($_REQUEST['app'])) {
             'pre_commands' => $config['pre_commands'],
             'deploy_commands' => $config['deploy_commands'],
             'post_commands' => $config['post_commands'],
-            ], $config['sites'][$_REQUEST['app']]
+            ], $config['sites'][$application]
         );
         debugLog("Application specific configurtion detected and being used!", $config['debug']);
     } else {
-        debugLog("The requested site/application ({$_REQUEST['app']}) configuration was not found!'", $config['debug']);
+        debugLog("The requested site/application ({$application}) configuration was not found!'", $config['debug']);
         exit;
     }
 }
@@ -220,7 +221,7 @@ echo "done";
  */
 function handlePingRequest()
 {
-    if (isset($_REQUEST['ping'])) {
+    if (isset($_GET['ping'])) {
         echo 'PONG';
         exit;
     }
