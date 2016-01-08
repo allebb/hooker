@@ -42,10 +42,11 @@ If you intend on just using the ``hooker.php`` file and do not intend on using a
 
 It is recommended that you create and manage a separate configuration file that will be used when present, the benefits of which will enable you to update the hooker.php file reguarly without having to re-enter your configuration settings each time but does come at the cost of having another non-project file in the root of your application/site.
 
-You can download the example configuration file and edit to your requirements as follows (the configuration file should be in the same directory as ``hooker.php`` otherwise it will not be used):
+You can download the example configuration file, rename it and edit to your requirements as follows (the configuration file should be in the same directory as ``hooker.php`` otherwise it will not be used):
 
 ```shell
-wget https://raw.githubusercontent.com/bobsta63/hooker/stable/hooker.conf.php
+wget https://raw.githubusercontent.com/bobsta63/hooker/stable/hooker.conf.example.php
+mv hooker.conf.example.php hooker.conf.php
 ```
 
 When the ``hooker.conf.php`` file is present the, configuration file (``hooker.conf.php``) will __merge__ with the default configuration found at the top of the ``hooker.php`` file therefore you only need to override settings and not duplicate.
