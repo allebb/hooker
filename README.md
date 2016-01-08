@@ -11,12 +11,6 @@ A standalone PHP web-hook script for triggering application deployments with Git
 
 This script is released under the [GPLv2](https://github.com/bobsta63/hooker/blob/master/LICENSE) license. Feel free to use it, fork it, improve it and contribute by open a pull-request!
 
-## Bugs
-
-Please report any bugs on the [Issue Tracker](https://github.com/bobsta63/hooker/issues), please ensure that bug reports are clear and contain as much information as possible.
-
-Bug reports will be looked at and resolved as soon as possible!
-
 ## Installation
 
 You can "install" and utilise this script in two ways:
@@ -217,5 +211,11 @@ TBC
 ### Configuring Hooker with BitBucket web-hooks
 
 TBC
+
+## Bugs
+
+Please report any bugs on the [Issue Tracker](https://github.com/bobsta63/hooker/issues), please ensure that bug reports are clear and contain as much information as possible.
+
+Bug reports will be looked at and resolved as soon as possible!
 
 
