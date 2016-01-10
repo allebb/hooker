@@ -49,7 +49,7 @@ $config = [
      */
     'deploy_commands' => [
         'cd {{local-repo}} && git reset --hard HEAD && git pull',
-        //'cd {{local-repo}} && sudo -u {{user}} git reset --hard HEAD && sudo -u {{user}} git pull',
+    //'cd {{local-repo}} && sudo -u {{user}} git reset --hard HEAD && sudo -u {{user}} git pull',
     ],
     /**
      * Post-deploy commands to run.
@@ -262,6 +262,20 @@ function debugLog($message, $output = false)
  */
 function requestHeader($key, $default = false)
 {
+    if (!function_exists('getallheaders')) {
+
+        function getallheaders()
+        {
+            $headers = [];
+            foreach ($_SERVER as $name => $value) {
+                if (substr($name, 0, 5) == 'HTTP_') {
+                    $headers[str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))))] = $value;
+                }
+            }
+            return $headers;
+        }
+    }
+
     $request_headers = getallheaders();
     if (isset($request_headers[$key])) {
         return $request_headers[$key];
@@ -334,13 +348,13 @@ function setStatusCode($status = HTTP_OK)
 {
     http_response_code($status);
 }
-
 /*
  * Outputs the debug log to the client.
  * @param array $config
  * @param boolean $exit
  * @return string
  */
+
 function outputLog($config, $exit = false)
 {
     if ($config['debug']) {
