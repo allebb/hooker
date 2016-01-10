@@ -145,6 +145,9 @@ $config = [
  * ////////////////////////////////////////////////////////////////////////////////////// *
  * 
  */
+$status = 200;
+$log = [];
+
 handlePingRequest();
 
 if (file_exists(__DIR__ . '/hooker.conf.php')) {
@@ -234,7 +237,7 @@ function handlePingRequest()
 function debugLog($message, $output = false)
 {
     if ($output) {
-        echo date("c") . ' - ' . $message . PHP_EOL;
+        $log[] = date("c") . ' - ' . $message . PHP_EOL;
     }
 }
 
@@ -287,6 +290,11 @@ function checkKeyAuth($config)
     debugLog("Key Auth successful", $config['debug']);
 }
 
+/**
+ * Checks the client's IP address against the whitelist.
+ * @param array $config
+ * @return void
+ */
 function checkIpAuth($config)
 {
     $remote_ip = $_SERVER['REMOTE_ADDR'];
@@ -299,4 +307,23 @@ function checkIpAuth($config)
         exit;
     }
     debugLog("IP ({$remote_ip}) authorised by whitelist.", $config['debug']);
+}
+
+/**
+ * Sets the HTTP response code.
+ * @param int $status
+ * @return void
+ */
+function setStatusCode($status = 200)
+{
+    http_response_code($status);
+}
+
+/*
+ * Outputs the debug log to the client.
+ * @return void
+ */
+function outputLog()
+{
+    
 }
