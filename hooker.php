@@ -12,7 +12,7 @@ $config = [
     /**
      * Enable debug mode - Will output errors to the screen.
      */
-    'debug' => false,
+    'debug' => true,
     /**
      * Set an opitional key for added protection.
      * Example: qgW87T9RgJYKj2DucnChELXeJhLCFP8N
@@ -48,7 +48,7 @@ $config = [
      * Deployment commands.
      */
     'deploy_commands' => [
-        //'cd {{local-repo}} && git reset --hard HEAD && git pull',
+        'cd {{local-repo}} && git reset --hard HEAD && git pull',
     //'cd {{local-repo}} && sudo -u {{user}} git reset --hard HEAD && sudo -u {{user}} git pull',
     ],
     /**
@@ -151,7 +151,6 @@ const HTTP_UNAUTHORISED = 401;
 const HTTP_NOTFOUND = 404;
 const HTTP_ERROR = 500;
 
-$status = HTTP_OK;
 $log = [];
 
 handlePingRequest();
@@ -165,18 +164,18 @@ if (file_exists(__DIR__ . '/hooker.conf.php')) {
 if ((!function_exists('shell_exec'))) {
     setStatusCode(HTTP_ERROR);
     debugLog("The PHP function shell_exec() does not exist, aborting deployment!", $config['debug']);
-    exit;
+    outputLog($config, true);
 }
 
 $git_output = shell_exec($config['git_bin'] . ' --version 2>&1');
 if ((!strpos($git_output, 'version'))) {
     setStatusCode(HTTP_ERROR);
     debugLog("The 'git' binary was not found or could not be executed on your server, aborting deployment!", $config['debug']);
-    exit;
+    outputLog($config, true);
 }
 debugLog("Git version detected: {$git_output}", $config['debug']);
 
-$application = ($_GET['app']) ? $_GET['app'] : false;
+$application = (isset($_GET['app'])) ? $_GET['app'] : false;
 if ($application) {
     if (isset($config['sites'][$application])) {
         $config = array_merge([
@@ -196,9 +195,9 @@ if ($application) {
         );
         debugLog("Application specific configurtion detected and being used!", $config['debug']);
     } else {
-        setStatusCode(HTTP_NOTFOUND);
         debugLog("The requested site/application ({$application}) configuration was not found!'", $config['debug']);
-        exit;
+        setStatusCode(HTTP_NOTFOUND);
+        outputLog($config, true);
     }
 }
 
@@ -209,7 +208,7 @@ if ($config['is_github']) {
     debugLog("Repository flagged as GitHub hosted.", $config['debug']);
     if (!in_array(requestHeader('X-Github-Event'), $config['github_deploy_events'])) {
         debugLog("The GitHub hook event (" . requestHeader('X-Github-Event') . ") was not found in the github_deploy_events list, skipping the deployment!", $config['debug']);
-        exit;
+        outputLog($config, true);
     }
 }
 
@@ -217,7 +216,7 @@ if ($config['is_bitbucket']) {
     debugLog("Repository flagged as BitBucket hosted.", $config['debug']);
     if (!in_array(requestHeader('X-Event-Key'), $config['bitbucket_deploy_events'])) {
         debugLog("The BitBucket hook event (" . requestHeader('X-Event-Key') . ") was not found in the 'bitbucket_deploy_events' list, skipping the deployment!", $config['debug']);
-        exit;
+        outputLog($config, true);
     }
 }
 
@@ -227,13 +226,12 @@ foreach (replaceCommandPlaceHolders($config) as $execute) {
     debugLog($exec_output, $config['debug']);
 }
 
-if ($config['debug']) {
-    echo outputLog($log);
-}
+outputLog($config);
 echo "done";
 
 /**
- * Responds to the PING request if requested.
+ * Responds to the PING request.
+ * return void
  */
 function handlePingRequest()
 {
@@ -246,11 +244,13 @@ function handlePingRequest()
 /**
  * Log messages out to the user.
  * @param string $message
+ * @param boolean $output
+ * @return void
  */
 function debugLog($message, $output = false)
 {
     if ($output) {
-        $log[] = date("c") . ' - ' . $message . PHP_EOL;
+        $GLOBALS['log'][] = date("c") . ' - ' . $message;
     }
 }
 
@@ -276,6 +276,7 @@ function requestHeader($key, $default = false)
  */
 function replaceCommandPlaceHolders($config)
 {
+    $command_array = [];
     $cmd_tags = [
         '{{local-repo}}' => $config['local_repo'],
         '{{user}}' => $config['user'],
@@ -291,6 +292,7 @@ function replaceCommandPlaceHolders($config)
 
 /**
  * Checks Key Parameter
+ * @param $config
  * @return void
  */
 function checkKeyAuth($config)
@@ -298,8 +300,8 @@ function checkKeyAuth($config)
     $provided_key = isset($_GET['key']) ? $_GET['key'] : false;
     if ($config['key'] && ($config['key'] !== $provided_key)) {
         setStatusCode(HTTP_UNAUTHORISED);
-        echo "Key auth failed!";
-        exit;
+        debugLog('Key auth failed!', true);
+        outputLog($config, true);
     }
     debugLog("Key Auth successful", $config['debug']);
 }
@@ -318,7 +320,7 @@ function checkIpAuth($config)
     if ((count($config['ip_whitelist']) > 0) && (!in_array($remote_ip, $config['ip_whitelist']))) {
         debugLog("IP ({$remote_ip}) is not permitted on the whitelist, aborting deloyment!", $config['debug']);
         setStatusCode(HTTP_UNAUTHORISED);
-        exit;
+        outputLog($config, true);
     }
     debugLog("IP ({$remote_ip}) authorised by whitelist.", $config['debug']);
 }
@@ -332,13 +334,19 @@ function setStatusCode($status = HTTP_OK)
 {
     http_response_code($status);
 }
+
 /*
  * Outputs the debug log to the client.
- * @param array $log
- * @return void
+ * @param array $config
+ * @param boolean $exit
+ * @return string
  */
-
-function outputLog($log = [])
+function outputLog($config, $exit = false)
 {
-    return implode(PHP_EOL, $log);
+    if ($config['debug']) {
+        echo implode(PHP_EOL, $GLOBALS['log']) . PHP_EOL;
+    }
+    if ($exit) {
+        exit;
+    }
 }
