@@ -48,7 +48,7 @@ $config = [
      * Deployment commands.
      */
     'deploy_commands' => [
-        'cd {{local-repo}} && git reset --hard HEAD && git pull',
+        //'cd {{local-repo}} && git reset --hard HEAD && git pull',
     //'cd {{local-repo}} && sudo -u {{user}} git reset --hard HEAD && sudo -u {{user}} git pull',
     ],
     /**
@@ -145,7 +145,13 @@ $config = [
  * ////////////////////////////////////////////////////////////////////////////////////// *
  * 
  */
-$status = 200;
+
+const HTTP_OK = 200;
+const HTTP_UNAUTHORISED = 401;
+const HTTP_NOTFOUND = 404;
+const HTTP_ERROR = 500;
+
+$status = HTTP_OK;
 $log = [];
 
 handlePingRequest();
@@ -157,12 +163,14 @@ if (file_exists(__DIR__ . '/hooker.conf.php')) {
 }
 
 if ((!function_exists('shell_exec'))) {
+    setStatusCode(HTTP_ERROR);
     debugLog("The PHP function shell_exec() does not exist, aborting deployment!", $config['debug']);
     exit;
 }
 
 $git_output = shell_exec($config['git_bin'] . ' --version 2>&1');
 if ((!strpos($git_output, 'version'))) {
+    setStatusCode(HTTP_ERROR);
     debugLog("The 'git' binary was not found or could not be executed on your server, aborting deployment!", $config['debug']);
     exit;
 }
@@ -188,6 +196,7 @@ if ($application) {
         );
         debugLog("Application specific configurtion detected and being used!", $config['debug']);
     } else {
+        setStatusCode(HTTP_NOTFOUND);
         debugLog("The requested site/application ({$application}) configuration was not found!'", $config['debug']);
         exit;
     }
@@ -199,7 +208,7 @@ checkKeyAuth($config);
 if ($config['is_github']) {
     debugLog("Repository flagged as GitHub hosted.", $config['debug']);
     if (!in_array(requestHeader('X-Github-Event'), $config['github_deploy_events'])) {
-        debugLog("The GitHub hook event (" . requestHeader('X-Github-Event') . ") was not found in the github_deploy_events list, aborting the deployment!", $config['debug']);
+        debugLog("The GitHub hook event (" . requestHeader('X-Github-Event') . ") was not found in the github_deploy_events list, skipping the deployment!", $config['debug']);
         exit;
     }
 }
@@ -207,7 +216,7 @@ if ($config['is_github']) {
 if ($config['is_bitbucket']) {
     debugLog("Repository flagged as BitBucket hosted.", $config['debug']);
     if (!in_array(requestHeader('X-Event-Key'), $config['bitbucket_deploy_events'])) {
-        debugLog("The BitBucket hook event (" . requestHeader('X-Event-Key') . ") was not found in the 'bitbucket_deploy_events' list, aborting the deployment!", $config['debug']);
+        debugLog("The BitBucket hook event (" . requestHeader('X-Event-Key') . ") was not found in the 'bitbucket_deploy_events' list, skipping the deployment!", $config['debug']);
         exit;
     }
 }
@@ -216,6 +225,10 @@ foreach (replaceCommandPlaceHolders($config) as $execute) {
     $exec_output = shell_exec($execute . ' 2>&1');
     debugLog("Executing command {$execute}", $config['debug']);
     debugLog($exec_output, $config['debug']);
+}
+
+if ($config['debug']) {
+    echo outputLog($log);
 }
 echo "done";
 
@@ -282,8 +295,9 @@ function replaceCommandPlaceHolders($config)
  */
 function checkKeyAuth($config)
 {
-    $provided_key = isset($_REQUEST['key']) ? $_REQUEST['key'] : false;
+    $provided_key = isset($_GET['key']) ? $_GET['key'] : false;
     if ($config['key'] && ($config['key'] !== $provided_key)) {
+        setStatusCode(HTTP_UNAUTHORISED);
         echo "Key auth failed!";
         exit;
     }
@@ -303,7 +317,7 @@ function checkIpAuth($config)
     }
     if ((count($config['ip_whitelist']) > 0) && (!in_array($remote_ip, $config['ip_whitelist']))) {
         debugLog("IP ({$remote_ip}) is not permitted on the whitelist, aborting deloyment!", $config['debug']);
-        echo "IP whitelist pass failed!";
+        setStatusCode(HTTP_UNAUTHORISED);
         exit;
     }
     debugLog("IP ({$remote_ip}) authorised by whitelist.", $config['debug']);
@@ -314,16 +328,17 @@ function checkIpAuth($config)
  * @param int $status
  * @return void
  */
-function setStatusCode($status = 200)
+function setStatusCode($status = HTTP_OK)
 {
     http_response_code($status);
 }
-
 /*
  * Outputs the debug log to the client.
+ * @param array $log
  * @return void
  */
-function outputLog()
+
+function outputLog($log = [])
 {
-    
+    return implode(PHP_EOL, $log);
 }
