@@ -10,7 +10,7 @@
  */
 $config = [
     /**
-     * Enable debug mode - Will output errors to the screen.
+     * Enable debug mode (output errors and information in the response body).
      */
     'debug' => true,
     /**
@@ -49,7 +49,7 @@ $config = [
      */
     'deploy_commands' => [
         'cd {{local-repo}} && git reset --hard HEAD && git pull',
-    //'cd {{local-repo}} && sudo -u {{user}} git reset --hard HEAD && sudo -u {{user}} git pull',
+        //'cd {{local-repo}} && sudo -u {{user}} git reset --hard HEAD && sudo -u {{user}} git pull',
     ],
     /**
      * Post-deploy commands to run.
@@ -195,7 +195,7 @@ if ($application) {
         );
         debugLog("Application specific configurtion detected and being used!", $config['debug']);
     } else {
-        debugLog("The requested site/application ({$application}) configuration was not found!'", $config['debug']);
+        debugLog("The requested site/application ({$application}) configuration was not found!", $config['debug']);
         setStatusCode(HTTP_NOTFOUND);
         outputLog($config, true);
     }
@@ -222,7 +222,7 @@ if ($config['is_bitbucket']) {
 
 foreach (replaceCommandPlaceHolders($config) as $execute) {
     $exec_output = shell_exec($execute . ' 2>&1');
-    debugLog("Executing command {$execute}", $config['debug']);
+    debugLog("Executing command: {$execute}", $config['debug']);
     debugLog($exec_output, $config['debug']);
 }
 
