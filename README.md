@@ -20,44 +20,47 @@ You can "install" and utilise this script in two ways:
 
 ### Single Site Installation (Single site configuration)
 
-The single site installation involves hosting the ``Hooker.php`` file (and an optional separate configuration file) in the public root of an existing website/application.
+The single site installation involves hosting the ``hooker.php`` file (and an optional separate configuration file) in the public root of an existing website/application.
 
-To download the latest stable version of the script, use ``wget`` to download it as follows:
-
-```shell
-cd /var/www/{your web project}
-wget https://raw.githubusercontent.com/bobsta63/hooker/stable/hooker.php
-```
-
-This will now download the latest stable version of hooker into the current directory. To test that the script is visible to the
-internet (and therefore to GitHub, BitBucket and any other providers) type into your browser:
-
-``http://yourwebsite.com/hooker.php?ping``
-
-If the script is available to the internet you should receive a 200 response and the words ``PONG`` appear on screen!
-
-Now that you have it working, you now need to configure it for your purposes.
-
-If you intend on just using the ``hooker.php`` file and do not intend on using a separate configuration file then you should edit the ``hooker.php`` file and edit the ``$config`` array found at the top of the file.
-
-It is recommended that you create and manage a separate configuration file that will be used when present, the benefits of which will enable you to update the hooker.php file reguarly without having to re-enter your configuration settings each time but does come at the cost of having another non-project file in the root of your application/site.
-
-You can download the example configuration file, rename it and edit to your requirements as follows (the configuration file should be in the same directory as ``hooker.php`` otherwise it will not be used):
+In a nutshell, in order to host a new site on a server (tested and developed on Ubuntu 14.04 LTS) that can utilise Hooker, the following steps are required:
 
 ```shell
-wget https://raw.githubusercontent.com/bobsta63/hooker/stable/hooker.conf.example.php
-mv hooker.conf.example.php hooker.conf.php
-```
+# Change to the root of our web server root "hosting" directory
+cd /var/www
 
-When the ``hooker.conf.php`` file is present the, configuration file (``hooker.conf.php``) will __merge__ with the default configuration found at the top of the ``hooker.php`` file therefore you only need to override settings and not duplicate.
+# Create a new .ssh profile for the 'www-data' user
+mkdir .ssh
+chown www-data:www-data -R .ssh
+chmod 0700 .ssh
+
+# Create a new SSH key for the www-data user to connect to your Git hosting provider with:
+sudo -u www-data ssh-keygen -t rsa -b 4096
+
+# Copy the contents of the public key file and paste it in the
+cat /var/www/.ssh/id_rsa.pub
+
+# Lets now make a site hosting directory and set the required permissions.
+mkdir mywebsite
+chown www-data:www-data -R mywebsite
+
+# Now we change into the directory and clone the git repo that contains our site content.
+cd mywebsite && sudo -u www-data git clone git@github.com/bobsta63/test.git .
+
+# Lets now download the latest stable version of Hooker...
+sudo -u www-data wget https://raw.githubusercontent.com/bobsta63/hooker/stable/hooker.php
+
+# Optionally you can also download a seperate configuration file, but is optional!
+sudo -u www-data wget https://raw.githubusercontent.com/bobsta63/hooker/stable/hooker.conf.example.php
+sudo -u www-data cp hooker.conf.example.php hooker.conf.php
+```
 
 ### Virtual Host Installation (Multiple site configuration)
 
 The virtual host installation involves creating a new web server virtual host of which then acts as a web-hook endpoint for multiple projects.
 
-When using this method, you should create separate site configurations that then get triggered by specifing the site/app configuration with the ``app`` parameter.
+When using this method, you should create separate site configurations that then get triggered by specifying the site/application configuration with the ``app`` parameter.
 
-A benefit of using the Multiple site configuration over the single site configuration is the ability to utilise Git to keep Hooker updated periodically.
+A benefit of using the multiple site configuration over the single site configuration is the ability to utilise Git to keep Hooker updated periodically.
 
 TBC
 
@@ -65,7 +68,7 @@ TBC
 
 The following configuration options exists and are explained below:
 
-### debug
+#### debug
 
 Type: ``boolean``
 
@@ -73,7 +76,7 @@ Default: false
 
 Description: When set to __true__ debug information will be outputted to the browser.
 
-### key
+##### key
 
 Type: ``string``
 
