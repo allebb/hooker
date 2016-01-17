@@ -29,19 +29,19 @@ In a nutshell, in order to host a new site on a server that can utilise Hooker, 
 cd /var/www
 
 # Create a new .ssh profile for the 'www-data' user and set the required permissions.
-mkdir .ssh
-chown www-data:www-data -R .ssh
-chmod 0700 .ssh
+sudo mkdir .ssh
+sudo chown www-data:www-data -R .ssh
+sudo chmod 0700 .ssh
 
 # Create a new SSH key for the ``www-data`` user to connect to your Git hosting provider with (in order to enable headless operation ensure that when asked to enter a passphrase you leave it empty - Just accept the defaults!):
 sudo -u www-data ssh-keygen -t rsa -b 4096
 
 # Copy the contents of the public key file and paste it in the
-cat /var/www/.ssh/id_rsa.pub
+sudo cat /var/www/.ssh/id_rsa.pub
 
 # Lets now make a site hosting directory and set the required permissions.
-mkdir mywebsite
-chown www-data:www-data -R mywebsite
+sudo mkdir mywebsite
+sudo chown www-data:www-data -R mywebsite
 
 # Now we change into the directory and clone the git repo that contains our site content.
 cd mywebsite && sudo -u www-data git clone git@github.com/bobsta63/test.git .
@@ -54,7 +54,7 @@ sudo -u www-data wget https://raw.githubusercontent.com/bobsta63/hooker/stable/h
 sudo -u www-data cp hooker.conf.example.php hooker.conf.php
 ```
 
-The above steps have been fully tested on Ubuntu Server 14.04 LTS and should work fine for other versions of Linux and UNIX too you may however find that you will need to substitute the web server user and group names from ``www-data`` to whatever your distribution/web server is using.
+The above steps have been fully tested on Ubuntu Server 14.04 LTS and should work fine for other versions of Linux and UNIX too; you may however find that you will need to substitute the web server user and group names from ``www-data`` to whatever your distribution/web server is using.
 
 ### Virtual Host Installation (Multiple site configuration)
 
@@ -82,7 +82,7 @@ sudo git clone -b stable https://github.com/bobsta63/hooker.git .
 We'll now copy the example configuration file and use that to configure our individual sites:
 
 ```shell
-cp hooker.conf.example.php hooker.conf.php
+sudo cp hooker.conf.example.php hooker.conf.php
 ``` 
 
 At this point you should edit this file and configure your sites, for example it may look like this:
@@ -140,13 +140,13 @@ chmod 0700 .ssh
 ```
 Now we'll generate a new SSH key-pair for the ``www-data`` user of which will be used to authenticate with your Git hosting service.
 
-__In order to enable headless operation ensure that you use the default options (just keep pressing the ENTER key at the prompts) and when asked to enter a passphrase ensure that you leave it empty if you don't Hooker will not work correctly!__
+__In order to enable headless operation ensure that you use the default options (just keep pressing the ENTER key at the prompts) and when asked to enter a passphrase ensure that you leave it empty otherwise Hooker will not work correctly!__
 
 ```shell
 sudo -u www-data ssh-keygen -t rsa -b 4096
 ```
 
-The contents of the public key (/var/www/.ssh/id_rsa.pub) now needs to be copied and added to your Git hosting provider's "Deploy keys" section:
+The contents of the public key (``/var/www/.ssh/id_rsa.pub``) now needs to be copied and added to your Git hosting provider's "Deploy keys" section:
 
 ```shell
 cat /var/www/.ssh/id_rsa.pub
@@ -210,7 +210,7 @@ sudo service nginx restart
 
 ### Finished!
 
-If all goes well, you should be able to access the 'ping' test page at: ``http://deploy.mysite.com/hooker.php?ping``.
+If all goes well, you should be able to access the 'ping' test page at: ``http://deploy.mysite.com/hooker.php?ping``, a successful installation should return the word 'PONG'.
 
 ## Configuration options
 
