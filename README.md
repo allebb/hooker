@@ -22,18 +22,18 @@ You can "install" and utilise this script in two ways:
 
 The single site installation involves hosting the ``hooker.php`` file (and an optional separate configuration file) in the public root of an existing website/application.
 
-In a nutshell, in order to host a new site on a server (tested and developed on Ubuntu 14.04 LTS) that can utilise Hooker, the following steps are required:
+In a nutshell, in order to host a new site on a server that can utilise Hooker, the following steps/commands are required to achieve a working environment:
 
 ```shell
-# Change to the root of our web server root "hosting" directory
+# Change to the root of our web server root "hosting" directory.
 cd /var/www
 
-# Create a new .ssh profile for the 'www-data' user
+# Create a new .ssh profile for the 'www-data' user and set the required permissions.
 mkdir .ssh
 chown www-data:www-data -R .ssh
 chmod 0700 .ssh
 
-# Create a new SSH key for the www-data user to connect to your Git hosting provider with:
+# Create a new SSH key for the ``www-data`` user to connect to your Git hosting provider with (in order to enable headless operation ensure that when asked to enter a passphrase you leave it empty - Just accept the defaults!):
 sudo -u www-data ssh-keygen -t rsa -b 4096
 
 # Copy the contents of the public key file and paste it in the
@@ -53,6 +53,8 @@ sudo -u www-data wget https://raw.githubusercontent.com/bobsta63/hooker/stable/h
 sudo -u www-data wget https://raw.githubusercontent.com/bobsta63/hooker/stable/hooker.conf.example.php
 sudo -u www-data cp hooker.conf.example.php hooker.conf.php
 ```
+
+The above steps have been fully tested on Ubuntu Server 14.04 LTS and should work fine for other versions of Linux and UNIX too you may however find that you will need to substitute the web server user and group names from ``www-data`` to whatever your distribution/web server is using.
 
 ### Virtual Host Installation (Multiple site configuration)
 
