@@ -87,6 +87,8 @@ cp hooker.conf.example.php hooker.conf.php
 
 At this point you should edit this file and configure your sites, for example it may look like this:
 
+``/var/www/hooker/hooker.conf.php``
+
 ```php
 <?php
 /**
@@ -106,7 +108,6 @@ return [
         // Example Laravel Deployment Configuration. - http://deploy.mysite.com/hooker.php?app=laravel_app&key=32c9f55eea8526374731acca13c81aca
         'laravel_app' => [
             'key' => '32c9f55eea8526374731acca13c81aca',
-            'remote_repo' => 'git@github.com:bobsta63/my-other-website-repo.git',
             'local_repo' => '/var/www/my_awesome_app',
             'branch' => 'deploy-live',
             'pre_commands' => [ // Custom pre-commands, will put Laravel into Maintenance mode!
