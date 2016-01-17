@@ -318,7 +318,31 @@ Default: ``[]``
 
 Description: Enables per-site configuration override.
 
-## Configuring Services to use Hooker 
+### Dynamic in-line tags
+
+When adding custom pre-commands, commands and post-commands, there are a number of dynamics tags that will be replaced at run-time, these are as follows:
+
+#### {{local-repo}}
+
+The ``{{local-repo}}`` tag will output the site hosting directory (eg. ``/var/www/mysite``) as set in the ``local_repo`` configuration option value.
+
+#### {{user}}
+
+The ``{{user}}`` tag will output the currently set ``user`` configuration option value.
+
+#### {{git-bin}}
+
+The ``{{git-bin}}`` tag will output the path to the Git binary (eg. ``/usr/local/bin/git``) using the ``git-bin`` configuration option value.
+
+#### {{branch}}
+
+The ``{{branch}}`` tag will output the Git branch (eg. ``master``) using the ``branch`` configuration option value.
+
+#### {{repo}}
+
+The ``{{repo}}`` tag will output the Git repository URI (eg. ``git@github.com:bobsta63/test.git``) using the ``remote_repo`` configuration value.
+
+## Configuring Services to use Hooker
 
 The following examples shows how to setup web-hooks to trigger deployments from a couple of the most used Git hosting services.
 
