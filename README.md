@@ -126,21 +126,21 @@ return [
 
 ### Create SSH profile for the www-data user and generate your "Deploy Key"
 
-We now need to change into the www-data home directory:
+Lets change into the ``www-data`` user's home directory:
 ```shell
 cd /var/www
 ```
 
-We will now create a new ``.ssh`` directory (profile) for the 'www-data' user and set the required permissions.
+We will now create a new ``.ssh`` directory (profile) for the 'www-data' user (as it is this user account that will be, behind the scenes connecting to Git) and set the required permissions.
 
 ```shell
 mkdir .ssh
 chown www-data:www-data -R .ssh
 chmod 0700 .ssh
 ```
-We now need to create a new SSH key for the ``www-data`` user to enable the user to without human interaction connect to your Git hosting provider.
+Now we'll generate a new SSH key-pair for the ``www-data`` user of which will be used to authenticate with your Git hosting service.
 
-** In order to enable headless operation ensure that when asked to enter a passphrase you leave it empty - Just accept the defaults!**
+__In order to enable headless operation ensure that you use the default options (just keep pressing the ENTER key at the prompts) and when asked to enter a passphrase ensure that you leave it empty if you don't Hooker will not work correctly!__
 
 ```shell
 sudo -u www-data ssh-keygen -t rsa -b 4096
