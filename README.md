@@ -15,8 +15,8 @@ This script is released under the [GPLv2](https://github.com/bobsta63/hooker/blo
 
 You can "install" and utilise this script in two ways:
 
-* Include ``hooker.php`` in your existing projects' root directory and update the configuration array.
-* Host as a separate virtual host and configure multiple "site" configurations.
+* [__Single Site__](https://github.com/bobsta63/hooker#single-site-installation-single-site-configuration) - Include ``hooker.php`` in your existing projects' root directory and update the configuration array.
+* [__Multiple Site__](https://github.com/bobsta63/hooker#virtual-host-installation-multiple-site-configuration) - Host as a separate virtual host and configure multiple "site" configurations.
 
 ### Single Site Installation (Single site configuration)
 
