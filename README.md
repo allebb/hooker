@@ -49,7 +49,7 @@ cd mywebsite && sudo -u www-data git clone git@github.com/bobsta63/test.git .
 # Lets now download the latest stable version of Hooker...
 sudo -u www-data wget https://raw.githubusercontent.com/bobsta63/hooker/stable/hooker.php
 
-# Optionally you can also download a seperate configuration file, but is optional!
+# Optionally you can also download a seperate configuration file, but is optional!     
 sudo -u www-data wget https://raw.githubusercontent.com/bobsta63/hooker/stable/hooker.conf.example.php
 sudo -u www-data cp hooker.conf.example.php hooker.conf.php
 ```
@@ -58,13 +58,124 @@ The above steps have been fully tested on Ubuntu Server 14.04 LTS and should wor
 
 ### Virtual Host Installation (Multiple site configuration)
 
-The virtual host installation involves creating a new web server virtual host of which then acts as a web-hook endpoint for multiple projects.
+The virtual host installation involves creating a new virtual host configuration of which then acts as a web-hook endpoint for multiple projects.
 
-When using this method, you should create separate site configurations that then get triggered by specifying the site/application configuration with the ``app`` parameter.
+When using this method, you should create separate site configurations that then get triggered by specifying the site/application configuration with the ``app`` parameter eg. ``https://deploy.mysite.com/hooker.php?app=website1``.
 
 A benefit of using the multiple site configuration over the single site configuration is the ability to utilise Git to keep Hooker updated periodically.
 
-TBC
+#### Creating the new virtualhost directory
+
+In this example, we'll create a new Nginx vhost configuration, first of all we need to create a hosting directory to host our ``hooker.php`` file:
+
+```shell
+sudo mkdir /var/www/hooker
+```
+
+We'll use Git to download the latest (stable) version (we'll also be able to use ``sudo -u www-data git pull`` in future to apply updates):
+
+```shell
+cd /var/www/hooker    
+sudo git clone -b stable https://github.com/bobsta63/hooker.git .
+```
+
+We'll now copy the example configuration file and use that to configure our individual sites:
+
+```shell
+cp hooker.conf.example.php hooker.conf.php
+``` 
+
+At this point you should edit this file and configure your sites, for example it may look like this:
+
+```php
+<?php
+/**
+ * Hooker Configuration File
+ */
+return [
+    'debug' => true,
+    'sites' => [
+        // Example basic HTML website. - http://deploy.mysite.com/hooker.php?app=my_basic_website&key=SomeRandomWordThatMustBePresentInTheKeyParam
+        'my_basic_website' => [ // To deploy this site, you would have to call: 
+            'debug' => false, // Optionally disable debugging for this specific site.
+            'key' => 'SomeRandomWordThatMustBePresentInTheKeyParam', // You'll need to set ?key=SomeRandomWordThatMustBePresentInTheKeyParam when calling the script!
+            'local_repo' => '/var/www/html-website', // The path to the site root (site should be owned by the webserver user, eg. 'chmod www-data:www-data -R /var/www/html-website')
+            'branch' => 'master',
+            'is_github' => true, // Website is on GitHub, will only deploy on GitHub 'push' and 'release' events.
+        ],
+        // Example Laravel Deployment Configuration. - http://deploy.mysite.com/hooker.php?app=laravel_app&key=32c9f55eea8526374731acca13c81aca
+        'laravel_app' => [
+            'key' => '32c9f55eea8526374731acca13c81aca',
+            'remote_repo' => 'git@github.com:bobsta63/my-other-website-repo.git',
+            'local_repo' => '/var/www/my_awesome_app',
+            'branch' => 'deploy-live',
+            'pre_commands' => [ // Custom pre-commands, will put Laravel into Maintenance mode!
+                'php {{local-repo}}/artisan down',
+            ],
+           'post_commands' => [ // Custom post-commands, will composer install, set permissions, run migrations and then take it back out of maintenance mode!
+                'cd {{local-repo}} && composer insall',
+                'chmod 755 {{local-repo}}/storage',
+                'php {{local-repo}}/artisan migrate --force',
+                'php {{local-repo}}/artisan down',
+            ],
+        ],
+    ],
+];
+```
+
+Now, we need to set the correct ownership and permissions for this new site:
+
+```shell
+chown www-data:www-data -R /var/www/hooker
+```
+
+This example Nginx virtualhost configuration can beadded to your server - assuming you're using Nginx and PHP7.0-FPM (just make adjustments as required):
+
+``/etc/nginx/sites-available/hooker.conf``
+
+```
+server {
+    listen 80;
+    #listen 443 ssl;
+    root /var/www/hooker;
+    server_name deploy.mysite.com;
+
+    # Optionally link to LetsEncrypt SSL certs
+    #ssl_certificate /etc/letsencrypt/live/deploy.mysite.com/fullchain.pem;
+    #ssl_certificate_key /etc/letsencrypt/live/deploy.mysite.com/privkey.pem;
+    #ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+    #ssl_prefer_server_ciphers on;
+    #ssl_ciphers AES256+EECDH:AES256+EDH:!aNULL;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        try_files $uri /index.php =404;
+        fastcgi_split_path_info ^(.+\.php)(/.+)$;
+        fastcgi_pass unix:/var/run/php/php7.0-fpm.sock;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
+}
+```
+
+Once created, you will need to symlink it to the ``/etc/nginx/sites-enabled`` directory like so:
+
+```shell
+cd /etc/nginx/sites-enabled
+ln -s ../sites-available/hooker.conf .
+```
+
+Now restart Nginx for the new virtualhost to take affect:
+
+```shell
+sudo service nginx restart
+```
+
+If all goes well, you should be able to access the 'ping' test page at: ``http://deploy.mysite.com/hooker.php?ping``.
 
 ## Configuration options
 
