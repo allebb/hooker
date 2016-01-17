@@ -124,13 +124,45 @@ return [
 ];
 ```
 
+### Create SSH profile for the www-data user and generate your "Deploy Key"
+
+We now need to change into the www-data home directory:
+```shell
+cd /var/www
+```
+
+We will now create a new ``.ssh`` directory (profile) for the 'www-data' user and set the required permissions.
+
+```shell
+mkdir .ssh
+chown www-data:www-data -R .ssh
+chmod 0700 .ssh
+```
+We now need to create a new SSH key for the ``www-data`` user to enable the user to without human interaction connect to your Git hosting provider.
+
+** In order to enable headless operation ensure that when asked to enter a passphrase you leave it empty - Just accept the defaults!**
+
+```shell
+sudo -u www-data ssh-keygen -t rsa -b 4096
+```
+
+The contents of the public key (/var/www/.ssh/id_rsa.pub) now needs to be copied and added to your Git hosting provider's "Deploy keys" section:
+
+```shell
+cat /var/www/.ssh/id_rsa.pub
+```
+
+### Set correct permissions on the site directory
+
 Now, we need to set the correct ownership and permissions for this new site:
 
 ```shell
 chown www-data:www-data -R /var/www/hooker
 ```
 
-This example Nginx virtualhost configuration can beadded to your server - assuming you're using Nginx and PHP7.0-FPM (just make adjustments as required):
+### Configure Nginx virtualhost configuration
+
+This example Nginx virtualhost configuration can be added to your server - assuming you're using Nginx and PHP7.0-FPM (just make adjustments as required):
 
 ``/etc/nginx/sites-available/hooker.conf``
 
@@ -175,6 +207,8 @@ Now restart Nginx for the new virtualhost to take affect:
 ```shell
 sudo service nginx restart
 ```
+
+### Finished!
 
 If all goes well, you should be able to access the 'ping' test page at: ``http://deploy.mysite.com/hooker.php?ping``.
 
@@ -244,7 +278,7 @@ Type: ``array``
 
 Default: ``[]``
 
-Description: Array of commands to execute before running the ``deploy_commands``, you can use the in-line tag replacements for dynamic replacements.
+Description: Array of commands to execute before running the ``deploy_commands``, you can use [the in-line tag replacements](https://github.com/bobsta63/hooker#dynamic-in-line-tags) for dynamic replacements.
 
 #### deploy_commands
 
@@ -252,7 +286,7 @@ Type: ``array``
 
 Default: ``['cd {{local-repo}} && git reset --hard HEAD && git pull']``
 
-Description: Array of commands to execute on execution of the script, you can use the in-line tag replacements for dynamic replacements.
+Description: Array of commands to execute on execution of the script, you can use [the in-line tag replacements](https://github.com/bobsta63/hooker#dynamic-in-line-tags) for dynamic replacements.
 
 #### post_commands
 
@@ -260,7 +294,7 @@ Type: ``array``
 
 Default: ``[]``
 
-Description: Array of commands to execute after running the ``deploy_commands``, you can use the in-line tag replacements for dynamic replacements.
+Description: Array of commands to execute after running the ``deploy_commands``, you can use [the in-line tag replacements](https://github.com/bobsta63/hooker#dynamic-in-line-tags) for dynamic replacements.
 
 #### is_github
 
