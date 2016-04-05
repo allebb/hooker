@@ -113,11 +113,11 @@ return [
             'pre_commands' => [ // Custom pre-commands, will put Laravel into Maintenance mode!
                 'php {{local-repo}}/artisan down',
             ],
-           'post_commands' => [ // Custom post-commands, will composer install, set permissions, run migrations and then take it back out of maintenance mode!
+           'post_commands' => [ // Custom post-commands we will run "composer install", set the correct filesystem permissions, run migrations and then take it back out of maintenance mode!
                 'cd {{local-repo}} && composer insall',
                 'chmod 755 {{local-repo}}/storage',
                 'php {{local-repo}}/artisan migrate --force',
-                'php {{local-repo}}/artisan down',
+                'php {{local-repo}}/artisan up',
             ],
         ],
     ],
