@@ -8,7 +8,7 @@ return [
     //// Example basic HTML website.
     //'my_example_website' => [
     //    'debug' => true, // Output debug info
-    //    'key' => 'SomeRandomWordThatMustBePresentInTheKeyParam',
+    //    'key' => 'SomeRandomStringThatMustBePresentInTheKeyParam',
     //    'remote_repo' => 'git@github.com:bobsta63/test-website.git',
     //    'local_repo' => '/var/www/html-website', // Use current directory
     //    'branch' => 'master',
