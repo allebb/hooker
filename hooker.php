@@ -129,10 +129,10 @@ $config = [
     //         // Use the default (inheritated deployment commands)
     //    ],
     //   'post_commands' => [
-    //        'cd {{local-repo}} && composer insall',
+    //        'cd {{local-repo}} && composer install',
     //        'chmod 755 {{local-repo}}/storage',
     //        'php {{local-repo}}/artisan migrate --force',
-    //        'php {{local-repo}}/artisan down',
+    //        'php {{local-repo}}/artisan up',
     //    ],
     //],
     ],
