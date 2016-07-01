@@ -38,7 +38,7 @@ return [
     //         // Use the default (inheritated deployment commands)
     //    ],
     //   'post_commands' => [
-    //        'cd {{local-repo}} && composer install',
+    //        'cd {{local-repo}} && composer install --no-dev',
     //        'chmod 755 {{local-repo}}/storage',
     //        'php {{local-repo}}/artisan migrate --force',
     //        'php {{local-repo}}/artisan up',
