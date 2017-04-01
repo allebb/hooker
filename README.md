@@ -47,10 +47,10 @@ sudo chown www-data:www-data -R mywebsite
 cd mywebsite && sudo -u www-data git clone git@github.com/bobsta63/test.git .
 
 # Lets now download the latest stable version of Hooker...
-sudo -u www-data wget https://raw.githubusercontent.com/bobsta63/hooker/stable/hooker.php
+sudo -u www-data wget https://raw.githubusercontent.com/allebb/hooker/stable/hooker.php
 
 # Optionally you can also download a seperate configuration file, but is optional!     
-sudo -u www-data wget https://raw.githubusercontent.com/bobsta63/hooker/stable/hooker.conf.example.php
+sudo -u www-data wget https://raw.githubusercontent.com/allebb/hooker/stable/hooker.conf.example.php
 sudo -u www-data cp hooker.conf.example.php hooker.conf.php
 ```
 
@@ -76,7 +76,7 @@ We'll use Git to download the latest (stable) version (we'll also be able to use
 
 ```shell
 cd /var/www/hooker    
-sudo git clone -b stable https://github.com/bobsta63/hooker.git .
+sudo git clone -b stable https://github.com/allebb/hooker.git .
 ```
 
 We'll now copy the example configuration file and use that to configure our individual sites:
@@ -278,7 +278,7 @@ Type: ``array``
 
 Default: ``[]``
 
-Description: Array of commands to execute before running the ``deploy_commands``, you can use [the in-line tag replacements](https://github.com/bobsta63/hooker#dynamic-in-line-tags) for dynamic replacements.
+Description: Array of commands to execute before running the ``deploy_commands``, you can use [the in-line tag replacements](https://github.com/allebb/hooker#dynamic-in-line-tags) for dynamic replacements.
 
 #### deploy_commands
 
@@ -286,7 +286,7 @@ Type: ``array``
 
 Default: ``['cd {{local-repo}} && git reset --hard HEAD && git pull']``
 
-Description: Array of commands to execute on execution of the script, you can use [the in-line tag replacements](https://github.com/bobsta63/hooker#dynamic-in-line-tags) for dynamic replacements.
+Description: Array of commands to execute on execution of the script, you can use [the in-line tag replacements](https://github.com/allebb/hooker#dynamic-in-line-tags) for dynamic replacements.
 
 #### post_commands
 
@@ -294,7 +294,7 @@ Type: ``array``
 
 Default: ``[]``
 
-Description: Array of commands to execute after running the ``deploy_commands``, you can use [the in-line tag replacements](https://github.com/bobsta63/hooker#dynamic-in-line-tags) for dynamic replacements.
+Description: Array of commands to execute after running the ``deploy_commands``, you can use [the in-line tag replacements](https://github.com/allebb/hooker#dynamic-in-line-tags) for dynamic replacements.
 
 #### is_github
 
@@ -390,7 +390,7 @@ TBC
 
 ## Bugs
 
-Please report any bugs on the [Issue Tracker](https://github.com/bobsta63/hooker/issues), please ensure that bug reports are clear and contain as much information as possible.
+Please report any bugs on the [Issue Tracker](https://github.com/allebb/hooker/issues), please ensure that bug reports are clear and contain as much information as possible.
 
 Bug reports will be looked at and resolved as soon as possible!
 
