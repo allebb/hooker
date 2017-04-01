@@ -9,14 +9,14 @@ A standalone PHP web-hook script for triggering application deployments with Git
 
 ## License
 
-This script is released under the [GPLv2](https://github.com/bobsta63/hooker/blob/master/LICENSE) license. Feel free to use it, fork it, improve it and contribute by open a pull-request!
+This script is released under the [GPLv2](https://github.com/allebb/hooker/blob/master/LICENSE) license. Feel free to use it, fork it, improve it and contribute by open a pull-request!
 
 ## Installation
 
 You can "install" and utilise this script in two ways:
 
-* [__Single Site__](https://github.com/bobsta63/hooker#single-site-installation-single-site-configuration) - Include ``hooker.php`` in your existing projects' root directory and update the configuration array.
-* [__Multiple Site__](https://github.com/bobsta63/hooker#virtual-host-installation-multiple-site-configuration) - Host as a separate virtual host and configure multiple "site" configurations.
+* [__Single Site__](https://github.com/allebb/hooker#single-site-installation-single-site-configuration) - Include ``hooker.php`` in your existing projects' root directory and update the configuration array.
+* [__Multiple Site__](https://github.com/allebb/hooker#virtual-host-installation-multiple-site-configuration) - Host as a separate virtual host and configure multiple "site" configurations.
 
 ### Single Site Installation (Single site configuration)
 
@@ -44,7 +44,7 @@ sudo mkdir mywebsite
 sudo chown www-data:www-data -R mywebsite
 
 # Now we change into the directory and clone the git repo that contains our site content.
-cd mywebsite && sudo -u www-data git clone git@github.com/bobsta63/test.git .
+cd mywebsite && sudo -u www-data git clone git@github.com/allebb/test.git .
 
 # Lets now download the latest stable version of Hooker...
 sudo -u www-data wget https://raw.githubusercontent.com/allebb/hooker/stable/hooker.php
@@ -374,7 +374,7 @@ The ``{{branch}}`` tag will output the Git branch (eg. ``master``) using the ``b
 
 #### {{repo}}
 
-The ``{{repo}}`` tag will output the Git repository URI (eg. ``git@github.com:bobsta63/test.git``) using the ``remote_repo`` configuration value.
+The ``{{repo}}`` tag will output the Git repository URI (eg. ``git@github.com:allebb/test.git``) using the ``remote_repo`` configuration value.
 
 ## Configuring Services to use Hooker
 
