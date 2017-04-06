@@ -42,6 +42,10 @@ return [
     //        'chmod 755 {{local-repo}}/storage',
     //        'php {{local-repo}}/artisan migrate --force',
     //        'php {{local-repo}}/artisan up',
+    //        'php {{local-repo}}/config:cache',
+    //        'php {{local-repo}}/cache:clear',
+    //        'php {{local-repo}}/routes:cache',
+    //        'php {{local-repo}}php queue:restart
     //    ],
     //],
     //],
