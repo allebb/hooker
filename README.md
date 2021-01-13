@@ -66,7 +66,7 @@ A benefit of using the multiple site configuration over the single site configur
 
 #### Creating the new virtualhost directory
 
-In this example, we'll create a new Nginx vhost configuration, first of all we need to create a hosting directory to host our ``hooker.php`` file:
+In this example, we'll create a new Nginx vhost configuration, first we need to create a hosting directory to host our ``hooker.php`` file:
 
 ```shell
 sudo mkdir /var/www/hooker
@@ -112,11 +112,15 @@ return [
             'branch' => 'deploy-live',
             'pre_commands' => [ // Custom pre-commands, will put Laravel into Maintenance mode!
                 'php {{local-repo}}/artisan down',
+                'php {{local-repo}}/artisan config:clear',
             ],
            'post_commands' => [ // Custom post-commands we will run "composer install", set the correct filesystem permissions, run migrations and then take it back out of maintenance mode!
-                'cd {{local-repo}} && composer insall',
+                'cd {{local-repo}} && composer install --no-dev --no-suggest --no-progress --prefer-dist --optimize-autoloader',
                 'chmod 755 {{local-repo}}/storage',
                 'php {{local-repo}}/artisan migrate --force',
+                'php {{local-repo}}/artisan config:cache',
+                'php {{local-repo}}/artisan cache:clear',
+                'php {{local-repo}}/artisan route:cache',
                 'php {{local-repo}}/artisan up',
             ],
         ],
@@ -187,7 +191,7 @@ server {
     location ~ \.php$ {
         try_files $uri /index.php =404;
         fastcgi_split_path_info ^(.+\.php)(/.+)$;
-        fastcgi_pass unix:/var/run/php/php7.0-fpm.sock;
+        fastcgi_pass unix:/var/run/php/php8.0-fpm.sock;
         fastcgi_index index.php;
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
         include fastcgi_params;
@@ -378,7 +382,7 @@ The ``{{repo}}`` tag will output the Git repository URI (eg. ``git@github.com:al
 
 ## Configuring Services to use Hooker
 
-The following examples shows how to setup web-hooks to trigger deployments from a couple of the most used Git hosting services.
+The following examples shows how to set up web-hooks to trigger deployments from a couple of the most used Git hosting services.
 
 ### Configuring Hooker with GitHub web-hooks
 

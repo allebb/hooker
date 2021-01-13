@@ -4,8 +4,8 @@
  *
  * @author Bobby Allen <ballen@bobbyallen.me>
  * @license http://opensource.org/licenses/GPL-2.0
- * @link https://github.com/bobsta63/hooker
- * @link https://github.com/bobsta63/hooker/issues
+ * @link https://github.com/allebb/hooker
+ * @link https://github.com/allebb/hooker/issues
  * 
  */
 $config = [
@@ -193,7 +193,7 @@ if ($application) {
             'post_commands' => $config['post_commands'],
             ], $config['sites'][$application]
         );
-        debugLog("Application specific configurtion detected and being used!", $config['debug']);
+        debugLog("Application specific configuration detected and being used!", $config['debug']);
     } else {
         debugLog("The requested site/application ({$application}) configuration was not found!", $config['debug']);
         setStatusCode(HTTP_NOTFOUND);
