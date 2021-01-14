@@ -1,8 +1,11 @@
 # Hooker
 
-Hooker is a lightweight PHP web application that can be used to trigger remote workflows on your Linux or UNIX based servers.
+Hooker is a lightweight PHP web application that can be used to trigger remote workflows on your Linux or UNIX based
+servers.
 
-It has specifically been designed to simplify and automate application deployments using Git or Docker containers when you don't want or need the complexity of a full CI/CD setup but you can easily use it for a ton of other really useful tasks.
+It has specifically been designed to simplify and automate application deployments using Git or Docker containers when
+you don't want or need the complexity of a full CI/CD setup but you can easily use it for a ton of other really useful
+tasks.
 
 ## Requirements
 
@@ -17,10 +20,17 @@ use it, fork it, improve it and contribute by open a pull-request!
 
 ## Installation
 
-The installation involves creating a new virtual host configuration of which then acts as a web-hook
-endpoint for multiple configured projects.
+The installation involves creating a new virtual host configuration of which then acts as a web-hook endpoint for
+multiple configured projects.
 
-You should create separate site configurations that then get triggered by specifying the site/application configuration with the ``app`` parameter eg. ``https://deploy.mysite.com/hooker.php?app=website1``.
+You should create separate site configurations that then get triggered by specifying the site/application configuration
+with the ``app`` parameter eg. ``https://deploy.mysite.com/hooker.php?app=website1``.
+
+**If you have set up your server using [Conductor](https://github.com/allebb/conductor) you can automatically install Hooker by running this simple command:**
+
+```shell
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/allebb/hooker/stable/utils/auto-install-conductor.sh)"
+```
 
 #### Creating the new virtualhost directory
 
@@ -28,7 +38,7 @@ In this example, we'll create a new Nginx vhost configuration, first we need to 
 our ``hooker.php`` file:
 
 ```shell
-sudo mkdir /var/www/hooker
+sudo -u www-data mkdir /var/www/hooker
 ```
 
 We'll use Git to download the latest (stable) version (we'll also be able to use ``sudo -u www-data git pull`` in future
@@ -36,14 +46,14 @@ to apply updates):
 
 ```shell
 cd /var/www/hooker    
-sudo git clone https://github.com/allebb/hooker.git .
-sudo git checkout stable
+sudo -u www-data git clone https://github.com/allebb/hooker.git .
+sudo -u www-data git checkout stable
 ```
 
 We'll now copy the example configuration file and use that to configure our individual sites:
 
 ```shell
-sudo cp hooker.conf.example.php hooker.conf.php
+sudo -u www-data cp hooker.conf.example.php hooker.conf.php
 ``` 
 
 At this point you should edit this file and configure your sites, for example it may look like this:
@@ -104,7 +114,7 @@ return [
             //'composer_bin' => '/usr/bin/composer', // Need to override with a different Composer version?
             'pre_commands' => [
                 '{{php-bin}} {{local-repo}}/artisan down', // Example of a pre-command to set our Laravel application into "maintenance mode".
-                '{{php-bin}} {{local-repo}}/artisan config:cache', // We'll also clear the configuration cache before we pull the latest code from Git..
+                '{{php-bin}} {{local-repo}}/artisan config:clear', // We'll also clear the configuration cache before we pull the latest code from Git..
             ],
             //'deploy_commands' => [
             //    // Uses the default (inherited deployment command eg. cd {{local-repo}} && {{git-bin}} reset --hard HEAD && {{git-bin}} pull)
@@ -190,13 +200,17 @@ server {
     root /var/www/hooker;
     server_name deploy.mysite.com;
 
-    # Wish to secure and host your deployment web service using LetsEncrypt SSL?
-    #listen 443 ssl;
-    #ssl_certificate /etc/letsencrypt/live/deploy.mysite.com/fullchain.pem;
-    #ssl_certificate_key /etc/letsencrypt/live/deploy.mysite.com/privkey.pem;
-    #ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+    # Wish to secure and host your deployment web service over HTTPS using a LetsEncrypt SSL certificate?
+    #listen          443 ssl;
+    #ssl_certificate /etc/letsencrypt/live/registry.hallinet.com/fullchain.pem;
+    #ssl_certificate_key /etc/letsencrypt/live/registry.hallinet.com/privkey.pem;
+    #ssl_trusted_certificate /etc/letsencrypt/live/registry.hallinet.com/chain.pem;
+
+    # Recommendations from https://raymii.org/s/tutorials/Strong_SSL_Security_On_nginx.html
+    #ssl_protocols TLSv1.1 TLSv1.2;
+    #ssl_ciphers 'EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH';
     #ssl_prefer_server_ciphers on;
-    #ssl_ciphers AES256+EECDH:AES256+EDH:!aNULL;
+    #ssl_session_cache shared:SSL:10m;
 
     location / {
         try_files $uri $uri/ /index.php?$query_string;
@@ -240,234 +254,21 @@ cd /var/www/hooker
 sudo -u www-data git pull
 ```
 
-**Remember to check and update your ``hooker.conf.php`` and local ``hooker.json`` files with any new configuration options (where applicable), an overview of the "Configuration options" can be found in the next section.**
-
+**Remember to check and update your ``hooker.conf.php`` and local ``hooker.json`` files with any new configuration
+options (where applicable), an overview of the "Configuration options" can be found in the next section.**
 
 ## Configuration options
 
-The following configuration options exists and are explained below:
-
-#### debug
-
-Type: ``boolean``
-
-Default: true
-
-Description: When set to __true__ runtime information will be outputted to the browser, this is especially useful for
-debugging purposes.
-
-#### key
-
-Type: ``string``
-
-Default: false
-
-Description: When not set as ``false``, this string must match the ``key`` parameter when calling the webhook, this can
-be set globally (for all sites) or, set it individually on a per-site basis.
-
-Example: ``TPuR81cS0gwP2T``
-
-#### remote_repo
-
-Type: ``string``
-
-Default: empty
-
-Description: This is currently not used but is reserved for future implementation.
-
-Example: ``git@github.com:bobsta63/test-website.git``
-
-#### branch
-
-Type: ``string``
-
-Default: ``master``
-
-Description: This is currently not used but is reserved for future implementation.
-
-Example: ``deploy-live``
-
-#### local_repo
-
-Type: ``string``
-
-Default: ``\_\_DIR\_\_``
-
-Description: Sets the local repository URL (where to run the Git commands from, by default ``\_\_DIR\_\_`` uses the same
-directory as the hooker.php file) and therefore, out of the box this is configured for single site deployments.
-
-#### user
-
-Type: ``string``
-
-Default: false
-
-Description: When set, the ``{{ user }}`` tag can be used in commands when you require to ``sudo -u (user)``, the user
-that the script runs under (eg. ``www-data``) must be configured for sudo rights in the ``/etc/sudoers`` file if you
-require to use this feature..
-
-Example: ``root``
-
-### use_json
-
-Type: ``boolean``
-
-Default: false
-
-Description: When set to `true`, the site deployment configuration is loaded from a ``hooker.json`` file found in the
-root of your ``local_repo`` path.
-
-#### pre_commands
-
-Type: ``array``
-
-Default: ``[]``
-
-Description: Array of commands to execute before running the ``deploy_commands``, you can
-use [the in-line tag replacements](https://github.com/allebb/hooker#dynamic-in-line-tags) for dynamic replacements.
-
-#### deploy_commands
-
-Type: ``array``
-
-Default: ``['cd {{local-repo}} && git reset --hard HEAD && git pull']``
-
-Description: Array of commands to execute on execution of the script, you can
-use [the in-line tag replacements](https://github.com/allebb/hooker#dynamic-in-line-tags) for dynamic replacements.
-
-#### post_commands
-
-Type: ``array``
-
-Default: ``[]``
-
-Description: Array of commands to execute after running the ``deploy_commands``, you can
-use [the in-line tag replacements](https://github.com/allebb/hooker#dynamic-in-line-tags) for dynamic replacements.
-
-#### is_github
-
-Type: ``boolean``
-
-Default: false
-
-Description: If set to ``true``, this will ensure that the hook will only execute the workflow if the GitHub hook events (see ``github_deploy_events``) match the GitHub web-hook event type that is received from the incoming GitHub webhook request. In addition, Hooker will only execute the workflow if the configured branch change that triggered the GitHub webhook matches too, this can be set using the ``branch`` option. This has been implemented
-to minimise unnecessary application downtime, bandwidth and server resources (as GitHub webhooks will be sent for all kinds of events and all branches regardless). When setting up the webhook in GitHub ensure that the **Content type** dropdown is set to ``application/json``.
-
-#### github_deploy_events
-
-Type: ``array``
-
-Default: ``['push', 'release']``
-
-Description: List of configured hook event headers that the code will deploy on (when using the ``is_github`` option is
-enabled)
-
-#### is_bitbucket
-
-Type: ``boolean``
-
-Default: false
-
-Description: If set, this will ensure that the hook only deploys the code on the configured BitBucket hook events in
-order to minimise unnecessary application downtime, bandwidth and server resources.
-
-#### bitbucket_deploy_events
-
-Type: ``array``
-
-Default: ``['repo:push']``
-
-Description: List of configured hook event headers that the code will deploy on (when using the ``is_bitbucket`` option
-is enabled)
-
-#### ip_whitelist
-
-Type: ``array``
-
-Default: ``['127.0.0.1', '::1']``
-
-Description: A whitelist of IP addresses that are allowed to invoke a deployment, by default this will only allow hook
-execution from __localhost__.
-
-#### git_bin
-
-Type: ``string``
-
-Default: ``git``
-
-Description: The full path to the Git binary on the server (if your PATH is set correctly, the default ``git`` should
-work fine!)
-
-#### php_bin
-
-Type: ``string``
-
-Default: ``php``
-
-Description: The full path to the PHP binary on the server (if your PATH is set correctly, the default ``php`` should
-work fine!). This setting is extremely useful if you are trying to deploy an application which requirements for older or
-newer PHP versions that cause Composer to complain and fail to deploy, this can be caused by deprecated functions etc.
-You can override this value for specific sites and applications too to resolve this particular issue.
-
-#### composer_bin
-
-Type: ``string``
-
-Default: ``/usr/bin/composer``
-
-Description: The full path to the Composer binary on the server.
-
-#### sites
-
-Type: ``array``
-
-Default: ``[]``
-
-Description: Enables per-site configuration override.
-
-### Dynamic in-line tags
-
-When adding custom pre-commands, commands and post-commands, there are a number of dynamics tags that will be replaced
-at run-time, these are as follows:
-
-#### {{local-repo}}
-
-The ``{{local-repo}}`` tag will output the site hosting directory (eg. ``/var/www/mysite``) as set in the ``local_repo``
-configuration option value.
-
-#### {{user}}
-
-The ``{{user}}`` tag will output the currently set ``user`` configuration option value.
-
-#### {{git-bin}}
-
-The ``{{git-bin}}`` tag will output the path to the Git binary (eg. ``/usr/bin/git``) using the ``git_bin``
-configuration option value.
-
-#### {{php-bin}}
-
-The ``{{php-bin}}`` tag will output the path to the PHP binary (eg. ``/usr/bin/php``) using the ``php_bin``
-configuration option value.
-
-#### {{composer-bin}}
-
-The ``{{composer-bin}}`` tag will output the path to the Composer binary (eg. ``/usr/bin/composer``) using
-the ``composer_bin`` configuration option value.
-
-#### {{branch}}
-
-The ``{{branch}}`` tag will output the Git branch (eg. ``master``) using the ``branch`` configuration option value.
-
-#### {{repo}}
-
-The ``{{repo}}`` tag will output the Git repository URI (eg. ``git@github.com:allebb/test.git``) using
-the ``remote_repo`` configuration value.
+A full list and explaination of the configuration items and workflow "placeholders" tags can be found in
+the [Configuration Items](docs/CONFIGURATION-ITEMS.md) file.
 
 ## Using a hooker.json configuration file
 
 Instead of having to edit and update the ``hooker.conf.php`` each time you wish to make a change to the deployment
-workflow, a ``hooker.json`` file can be committed to your Git repository and will be used to define the worflow steps,
+workflow, a ``hooker.json`` file can be committed to your Git repository and will be used to define the workflow steps,
 the syntax is as follows:
+
+**This example demonstrates the deployment of a Laravel web application**
 
 ```json
 {
@@ -476,7 +277,7 @@ the syntax is as follows:
   "composer_bin": "/usr/bin/composer",
   "pre_commands": [
     "{{php-bin}} {{local-repo}}/artisan down",
-    "{{php-bin}} {{local-repo}}/artisan config:cache"
+    "{{php-bin}} {{local-repo}}/artisan config:clear"
   ],
   "#deploy_commands": [],
   "post_commands": [
@@ -491,27 +292,71 @@ the syntax is as follows:
 }
 ```
 
-**Notice in the above JSON file example that the ``deploy_commands`` JSON key has been commented out (with a hash), this is important as an empty array here will override the default ``git pull`` commands, only uncomment this if you need to do custom tasks/customise the git pull command here.**
+**Notice in the above JSON file example that the ``deploy_commands`` JSON key has been commented out (with a hash), this
+is important as an empty array here will override the default ``git pull`` commands, only uncomment this if you need to
+do custom tasks/customise the git pull command here.**
 
-**Keep in mind that the Hooker webservice will first check that a local ``hooker.json`` file exists and then uses the workflow steps within it, so you would have to effectively "hit" this endpoint twice for any ``hooker.json`` changes to take effect as the first time it's run, it will load the local file which in turn would then pull the latest changes from your repository and only then, on the next execution will it use the latest workflow instructions.**
+**Keep in mind that the Hooker webservice will first check that a local ``hooker.json`` file exists and then uses the
+workflow steps within it, so you would have to effectively "hit" this endpoint twice for any ``hooker.json`` changes to
+take effect as the first time it's run, it will load the local file which in turn would then pull the latest changes
+from your repository and only then, on the next execution will it use the latest workflow instructions.**
 
 **For this to work, your Hooker configuration file MUST specify the ``local_repo`` and ``key`` properties,
 the ``use_json`` must also be set to ``true``.**
 
-For security reasons, when using a ``hooker.json`` file some overrides are not available and will need to be set in the main Hooker web service configuration file (``hooker.conf.php``). These settings are: ``remote_repo``, ``branch``, ``local_repo``, ``key`` and ``user``.
+For security reasons, when using a ``hooker.json`` file some overrides are not available and will need to be set in the
+main Hooker web service configuration file (``hooker.conf.php``). These settings are: ``remote_repo``, ``branch``
+, ``local_repo``, ``key`` and ``user``.
 
 ## Configuring Services to use Hooker
 
-The following examples shows how to set up web-hooks to trigger deployments from a couple of the most used Git hosting
+Generally you would simply use the webhook URL in your CI/CD environment which will then make a request to the endpoint
+and resulting in the deployment of your application/website on your server but for smaller projects where you don't need
+the complexity or overhead of full CI/CD environments you can instead use some of these services below to quickly and
+easily set up a fully automated deployment environment.
+
+The following examples shows how to set up webhooks to trigger deployments from a couple of the most used Git hosting
 services.
 
-### Configuring Hooker with GitHub web-hooks
+### Configuring Hooker with GitHub Webhooks
 
-TBC
+Getting your sites and web applications to deploy using GitHub web hooks is super easy - You can very easily (and
+quickly) have your code automatically deployed to your server (or group of servers) by simply adding a GitHub web hook.
 
-### Configuring Hooker with BitBucket web-hooks
+When I've needed to do quick and simple automated deployments, I'll create a separate Git branch called "deploy-prod" (
+or "deploy-test") and then set up a GitHub webhook.
 
-TBC
+If you wish to use this simple method for having your sites or applications automatically deploy ensure that you setup
+the GitHub webhook as follows:
+
+In your ``hooker.conf.php`` file make sure that you have these (``is_github`` and ``branch``) settings:
+
+```text
+'sites' => [
+    'my-example-webapp' => [
+        ...
+        'key' => 'MyRandomDeploymentKey',
+        'is_github' => true, // Using GitHub webhooks to trigger this workflow.
+        'branch' => 'deploy-prod', // As long as the GitHub webhook request relates to changes on this git branch, we'll run the deployment workflow!
+        ...
+    ],
+]
+```
+
+You should then configure your GitHub web hook to send the payload to your hooker deployment URL, in our example this
+would be ``http://deploy.mysite.com/hooker.php?app=my-example-webapp&key=MyRandomDeploymentKey`` and ensure that you
+specify the **Content type** as ``application/json`` as shown here:
+
+![GitHub web hook configuration](https://blog.bobbyallen.me/wp-content/uploads/2021/01/Screenshot-2021-01-14-at-18.48.14.png "Example GitHub webhook configuration.")
+
+When you push to the configured branch, GitHub will trigger a deployment to our server using this web hook URL. You can
+view the output of the deployment process from this screen too as as long as you have the ``debug`` option set
+to ``true`` in your Hooker configuration you will be able to see the output (result) of each of your workflow/deployment
+steps.
+
+### Configuring Hooker with BitBucket Webhooks
+
+** TBC **
 
 ## Bugs
 

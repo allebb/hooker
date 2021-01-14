@@ -53,7 +53,7 @@ return [
             //'composer_bin' => '/usr/bin/composer', // Need to override with a different Composer version?
             'pre_commands' => [
                 '{{php-bin}} {{local-repo}}/artisan down', // Example of a pre-command to set our Laravel application into "maintenance mode".
-                '{{php-bin}} {{local-repo}}/artisan config:cache', // We'll also clear the configuration cache before we pull the latest code from Git..
+                '{{php-bin}} {{local-repo}}/artisan config:clear', // We'll also clear the configuration cache before we pull the latest code from Git..
             ],
             //'deploy_commands' => [
             //    // Uses the default (inherited deployment command eg. cd {{local-repo}} && {{git-bin}} reset --hard HEAD && {{git-bin}} pull)
