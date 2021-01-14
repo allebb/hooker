@@ -1,13 +1,15 @@
 <?php
+
 /**
  * Hooker Configuration File
  */
 return [
     // Enable output of debugging information.
     'debug' => true,
+    // 'git_bin' => '/usr/bin/git',
     // You can set a default PHP version to be used by all sites/applications (otherwise will use 'php' by default)
     // this version can also be overridden by individual sites/applications as required.
-    //'php_bin' => 'php7.4',
+    //'php_bin' => '/usr/bin/php7.4',
     // You can set the default Composer installation path (otherwise will default to '/usr/bin/composer' by default)
     //'composer_bin' => '/usr/bin/composer',
     // By default we'll allow any server(s) to "hit" these deployment hooks but you can add specific IP addresses
@@ -40,7 +42,8 @@ return [
     //      'local_repo' => '/var/www/my-other-website',
     //      'branch' => 'deploy-live',
     //      'user' => false,
-    //      'php_bin' => 'php8.0', // Overrides the PHP version used for this deployment.
+    //      //'php_bin' => '/usr/bin/php8.0', // Override the "default" PHP version used for this deployment/running Composer.
+    //      //'composer_bin' => '/usr/bin/composer', // Need to override with a different Composer version?
     //      'pre_commands' => [
     //          'php {{local-repo}}/artisan down',
     //          'php {{local-repo}}/artisan config:cache',

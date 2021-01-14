@@ -137,6 +137,8 @@ const HTTP_ERROR = 500;
 
 $log = [];
 
+header("Content-Type: plain/text");
+
 handlePingRequest();
 
 // Read current PHP version that this script is using.
@@ -147,6 +149,8 @@ if (file_exists(__DIR__ . '/hooker.conf.php')) {
     $config = array_merge($config, $config_file);
     debugLog("Loading configuration from configuration override file (hooker.conf.php)", $config['debug']);
 }
+
+outputAsciiArtHeader();
 
 if ((!function_exists('shell_exec'))) {
     setStatusCode(HTTP_ERROR);
@@ -162,6 +166,7 @@ if ((!strpos($git_output, 'version'))) {
     outputLog($config, true);
 }
 debugLog("Git version detected: {$git_output}", $config['debug']);
+debugLog("Hooker webservice PHP version detected: {$php_version}", $config['debug']);
 
 $application = (isset($_GET['app'])) ? $_GET['app'] : false;
 if ($application) {
@@ -203,10 +208,11 @@ foreach ([$config['git_bin'], $config['php_bin'], $config['composer_bin']] as $b
         outputLog($config, true);
     }
 }
+
 debugLog("Using tools installed at:", $config['debug']);
-debugLog(" - Git: {$config['git_bin']}", $config['debug']);
-debugLog(" - PHP: {$config['php_bin']}", $config['debug']);
-debugLog(" - Composer: {$config['composer_bin']}", $config['debug']);
+debugLog(" * Git: {$config['git_bin']}", $config['debug']);
+debugLog(" * PHP: {$config['php_bin']}", $config['debug']);
+debugLog(" * Composer: {$config['composer_bin']}", $config['debug']);
 
 if ($config['is_github']) {
     debugLog("Repository flagged as GitHub hosted.", $config['debug']);
@@ -227,7 +233,7 @@ if ($config['is_bitbucket']) {
 }
 
 foreach (replaceCommandPlaceHolders($config) as $execute) {
-    $exec_output = shell_exec($execute . ' 2>&1');
+    $exec_output = executeAndCaptureOutput($execute);
     debugLog("Executing command: {$execute}", $config['debug']);
     debugLog($exec_output, $config['debug']);
 }
@@ -245,6 +251,16 @@ function handlePingRequest()
         echo 'PONG';
         exit;
     }
+}
+
+/**
+ * Executes a system command and returns the stdOut.
+ * @param $execute
+ * @return mixed
+ */
+function executeAndCaptureOutput($execute)
+{
+    return shell_exec($execute . ' 2>&1');
 }
 
 /**
@@ -370,5 +386,28 @@ function outputLog($config, $exit = false)
     }
     if ($exit) {
         exit;
+    }
+}
+
+/**
+ * Output a fancy ASCII art header on the debug information.
+ * @param false $show
+ * @return void
+ */
+function outputAsciiArtHeader($show = false)
+{
+    $logo = [
+        "",
+        "             __  __            __                     ",
+        "            / / / /___  ____  / /_____  _____         ",
+        "           / /_/ / __ \/ __ \/ //_/ _ \/ ___/         ",
+        "          / __  / /_/ / /_/ / ,< /  __/ /             ",
+        "         /_/ /_/\____/\____/_/|_|\___/_/              ",
+        "                                                      ",
+        "              ..automated deployments, made easy!     ",
+        "                                                      ",
+    ];
+    foreach ($logo as $line) {
+        debugLog($line, $show);
     }
 }

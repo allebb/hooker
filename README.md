@@ -389,7 +389,7 @@ The ``{{user}}`` tag will output the currently set ``user`` configuration option
 
 #### {{git-bin}}
 
-The ``{{git-bin}}`` tag will output the path to the Git binary (eg. ``/usr/local/bin/git``) using the ``git_bin`` configuration option value.
+The ``{{git-bin}}`` tag will output the path to the Git binary (eg. ``/usr/bin/git``) using the ``git_bin`` configuration option value.
 
 #### {{php-bin}}
 
