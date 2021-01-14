@@ -96,6 +96,7 @@ At this point you should edit this file and configure your sites, for example it
  */
 return [
     'debug' => true,
+    'php_bin' => 'php7.4',
     'sites' => [
         // Example basic HTML website. - http://deploy.mysite.com/hooker.php?app=my_basic_website&key=SomeRandomWordThatMustBePresentInTheKeyParam
         'my_basic_website' => [ // To deploy this site, you would have to call: 
@@ -110,6 +111,7 @@ return [
             'key' => '32c9f55eea8526374731acca13c81aca',
             'local_repo' => '/var/www/my_awesome_app',
             'branch' => 'deploy-live',
+            'php_bin' => 'php8.0',
             'pre_commands' => [ // Custom pre-commands, will put Laravel into Maintenance mode!
                 'php {{local-repo}}/artisan down',
                 'php {{local-repo}}/artisan config:clear',
@@ -348,6 +350,23 @@ Default: ``git``
 
 Description: The full path to the Git binary on the server (if your PATH is set correctly, the default ``git`` should work fine!)
 
+#### php_bin
+
+Type: ``string``
+
+Default: ``php``
+
+Description: The full path to the PHP binary on the server (if your PATH is set correctly, the default ``php`` should work fine!). This setting is extremely useful if you are trying to deploy an application which requirements for older or newer PHP versions that cause Composer to complain and fail to deploy, this can be caused by deprecated functions etc. You can override this value for specific sites and applications too to resolve this particular issue. 
+
+#### composer_bin
+
+Type: ``string``
+
+Default: ``/usr/bin/composer``
+
+Description: The full path to the Composer binary on the server.
+
+
 #### sites
 
 Type: ``array``
@@ -370,7 +389,16 @@ The ``{{user}}`` tag will output the currently set ``user`` configuration option
 
 #### {{git-bin}}
 
-The ``{{git-bin}}`` tag will output the path to the Git binary (eg. ``/usr/local/bin/git``) using the ``git-bin`` configuration option value.
+The ``{{git-bin}}`` tag will output the path to the Git binary (eg. ``/usr/local/bin/git``) using the ``git_bin`` configuration option value.
+
+#### {{php-bin}}
+
+The ``{{php-bin}}`` tag will output the path to the PHP binary (eg. ``/usr/bin/php``) using the ``php_bin`` configuration option value.
+
+#### {{composer-bin}}
+
+The ``{{composer-bin}}`` tag will output the path to the Composer binary (eg. ``/usr/bin/composer``) using the ``composer_bin`` configuration option value.
+
 
 #### {{branch}}
 
