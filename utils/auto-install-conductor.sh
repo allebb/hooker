@@ -12,7 +12,7 @@ if [ $? -eq 0 ]; then
     echo " * Conductor has been found, continuing..."
 else
     echo " ! Conductor does not appear to be installed, exiting!"
-    exit(1)
+    exit 1
 fi
 
 # Ask the user what directory name they want to host it under (the conductor application name), default to 'hooker'
@@ -43,10 +43,10 @@ if [ $? -eq 0 ]; then
     echo " * Nginx configuration passes validation..."
 else
     echo " ! Something went wrong with the Nginx configuration validation, check your nginx configurations!"
-    exit(1)
+    exit 1
 fi
 
 # Restart the Nginx service to make the web service available.
 sudo service nginx restart
 echo "Installation complete!"
-exit(0)
+exit 0
