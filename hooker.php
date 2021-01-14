@@ -16,7 +16,7 @@ $config = [
     'debug' => true,
 
     /**
-     * Set an opitional key for added protection.
+     * Set an optional key for added protection.
      * Example: qgW87T9RgJYKj2DucnChELXeJhLCFP8N
      */
     'key' => false,
@@ -31,7 +31,6 @@ $config = [
     /**
      * Which branch to pull/checkout from.
      * Example: master
-     * @todo Project currently does not make use of this setting but is reserved for future functionality.
      */
     'branch' => 'master',
 
@@ -104,12 +103,12 @@ $config = [
     /**
      * The path to the git binary.
      */
-    'git_bin' => 'git',
+    'git_bin' => '/usr/bin/git',
 
     /**
      * The default path to the PHP version used for deployments.
      */
-    'php_bin' => 'php',
+    'php_bin' => '/usr/bin/php',
 
     /**
      * The path to the composer binary.
@@ -130,6 +129,8 @@ $config = [
  *
  */
 
+const HOOKER_VERSION = "2.0.0";
+
 const HTTP_OK = 200;
 const HTTP_UNAUTHORISED = 401;
 const HTTP_NOTFOUND = 404;
@@ -137,7 +138,7 @@ const HTTP_ERROR = 500;
 
 $log = [];
 
-header("Content-Type: plain/text");
+header("Content-Type: text/plain");
 
 handlePingRequest();
 
@@ -150,7 +151,7 @@ if (file_exists(__DIR__ . '/hooker.conf.php')) {
     debugLog("Loading configuration from configuration override file (hooker.conf.php)", $config['debug']);
 }
 
-outputAsciiArtHeader();
+outputAsciiArtHeader($config['debug']);
 
 if ((!function_exists('shell_exec'))) {
     setStatusCode(HTTP_ERROR);
@@ -158,15 +159,16 @@ if ((!function_exists('shell_exec'))) {
     outputLog($config, true);
 }
 
-$git_output = shell_exec($config['git_bin'] . ' --version 2>&1');
+$git_output = trim(shell_exec($config['git_bin'] . ' --version 2>&1'));
 if ((!strpos($git_output, 'version'))) {
     setStatusCode(HTTP_ERROR);
     debugLog("The 'git' binary was not found or could not be executed on your server, aborting deployment!",
         $config['debug']);
     outputLog($config, true);
 }
+debugLog("Hooker webservice running: v" . HOOKER_VERSION . " (on PHP v{$php_version})", $config['debug']);
 debugLog("Git version detected: {$git_output}", $config['debug']);
-debugLog("Hooker webservice PHP version detected: {$php_version}", $config['debug']);
+
 
 $application = (isset($_GET['app'])) ? $_GET['app'] : false;
 if ($application) {
@@ -175,6 +177,7 @@ if ($application) {
             'debug' => $config['debug'],
             'key' => $config['key'],
             'user' => $config['user'],
+            'use_json' => $config['use_json'],
             'git_bin' => $config['git_bin'],
             'php_bin' => $config['php_bin'],
             'composer_bin' => $config['composer_bin'],
@@ -186,9 +189,8 @@ if ($application) {
             'pre_commands' => $config['pre_commands'],
             'deploy_commands' => $config['deploy_commands'],
             'post_commands' => $config['post_commands'],
-        ], $config['sites'][$application]
-        );
-        debugLog("Application specific configuration detected and being used!", $config['debug']);
+        ], $config['sites'][$application]);
+        debugLog("Application configuration detected and being used!", $config['debug']);
     } else {
         debugLog("The requested site/application ({$application}) configuration was not found!", $config['debug']);
         setStatusCode(HTTP_NOTFOUND);
@@ -199,6 +201,12 @@ if ($application) {
 checkIpAuth($config);
 checkKeyAuth($config);
 
+if ($config['use_json']) {
+    $localConfigPath = $config['local_repo'] . '/hooker.json';
+    debugLog("Deployment workflow is configured to use a local 'hooker.json' file, attempting to load this now from: {$localConfigPath}",
+        $config['debug']);
+    $config = array_merge($config, loadLocalHookerConf($localConfigPath, $config));
+}
 
 foreach ([$config['git_bin'], $config['php_bin'], $config['composer_bin']] as $binary) {
     if (!file_exists($binary)) {
@@ -221,6 +229,24 @@ if ($config['is_github']) {
             $config['debug']);
         outputLog($config, true);
     }
+
+    if (requestHeader('Content-Type') == 'application/json') {
+        $payload = json_decode(file_get_contents('php://input'), true);
+        if (!$payload) {
+            debugLog("Unable to decode the JSON payload, check that the webhook is configured to use `application/json` as the Content type, skipping branch matching...",
+                $config['debug']);
+        }
+
+        if (!isset($payload['ref']) || $payload['ref'] !== 'refs/heads/' . $config['branch']) {
+            debugLog("Branch matching failed, configuration checking for '" . 'refs/heads/' . $config['branch'] . "' but GitHub sent: " . $payload['ref'] . "' instead! Skipping this deployment!",
+                $config['debug']);
+            debugLog("Skipping this deployment!", $config['debug']);
+            outputLog($config, true);
+        }
+
+        debugLog("Branch matching successful, GitHub triggered the webhook for branch: " . $config['branch'] . ", continuing with the deployment...",
+            $config['debug']);
+    }
 }
 
 if ($config['is_bitbucket']) {
@@ -233,13 +259,12 @@ if ($config['is_bitbucket']) {
 }
 
 foreach (replaceCommandPlaceHolders($config) as $execute) {
-    $exec_output = executeAndCaptureOutput($execute);
-    debugLog("Executing command: {$execute}", $config['debug']);
-    debugLog($exec_output, $config['debug']);
+    $exec_output = trim(executeAndCaptureOutput($execute));
+    debugLog("RUN [{$execute}]" . PHP_EOL . ":::::    RESULT    :::::" . PHP_EOL . $exec_output . PHP_EOL . "::::::::::::::::::::::::", $config['debug']);
 }
 
 outputLog($config);
-echo "done";
+echo "done!";
 
 /**
  * Responds to the PING request.
@@ -391,7 +416,7 @@ function outputLog($config, $exit = false)
 
 /**
  * Output a fancy ASCII art header on the debug information.
- * @param false $show
+ * @param boolean $show Output the generated ASCII art header.
  * @return void
  */
 function outputAsciiArtHeader($show = false)
@@ -402,7 +427,7 @@ function outputAsciiArtHeader($show = false)
         "            / / / /___  ____  / /_____  _____         ",
         "           / /_/ / __ \/ __ \/ //_/ _ \/ ___/         ",
         "          / __  / /_/ / /_/ / ,< /  __/ /             ",
-        "         /_/ /_/\____/\____/_/|_|\___/_/              ",
+        "         /_/ /_/\____/\____/_/|_|\___/_/  v" . HOOKER_VERSION,
         "                                                      ",
         "              ..automated deployments, made easy!     ",
         "                                                      ",
@@ -411,3 +436,34 @@ function outputAsciiArtHeader($show = false)
         debugLog($line, $show);
     }
 }
+
+/**
+ * Reads a local (versioned) Hooker Configuration file (hooker.json) and merges with the current default configuration.
+ * @param string $path The file system path to the local repository.
+ * @param array $baseConfiguration The configuration array to merge with.
+ * @return array
+ */
+function loadLocalHookerConf($path, $baseConfiguration = [])
+{
+    $disabledOverrides = [
+        'remote_repo',
+        'local_repo',
+        'branch',
+        'key',
+        'user',
+    ];
+    if (!file_exists($path)) {
+        debugLog("The `hooker.json` file was not found at: {$path}, please fix and try again!", true);
+        outputLog($baseConfiguration, true);
+    }
+
+    $localConfiguration = json_decode(file_get_contents($path), true);
+    if (!$localConfiguration) {
+        debugLog("The `hooker.json` file syntax is invalid (it must be valid JSON), please fix and try again!", true);
+        outputLog($baseConfiguration, true);
+    }
+    $mergedConfig = array_merge($baseConfiguration, $localConfiguration);
+    debugLog("The `hooker.json` workflow has been loaded successfully!", $baseConfiguration['debug']);
+    return array_diff_key($mergedConfig, array_flip($disabledOverrides));
+}
+
