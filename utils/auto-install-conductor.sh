@@ -22,7 +22,7 @@ read -p 'What directory should we deploy Hooker to? (eg: "hooker"): ' appname
 read -p 'What domain do you want Hooker to be hosted on? (eg: "deploy.mysite.com"): ' fqdn
 
 # Call the CLI command (using sudo) to create the hosting environment.
-sudo conductor new $appname --fqdn="{$fqdn}" --path="/"
+sudo conductor new $appname --fqdn="${fqdn}" --path="/"
 
 # Git clone (as www-data user) to the /var/conductor/application/{name} directory
 sudo -u www-data git clone git@github.com:allebb/hooker.git /var/conductor/applications/$appname
