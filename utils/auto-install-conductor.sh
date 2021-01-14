@@ -7,7 +7,7 @@
 
 # Check the Conductor version/if it's installed
 echo "Checking Conductor is installed..."
-conductor --version
+conductor --version > /dev/null
 if [ $? -eq 0 ]; then
     echo " * Conductor has been found, continuing..."
 else
