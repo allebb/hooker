@@ -22,10 +22,15 @@ read -p 'What directory should we deploy Hooker to? (eg: "hooker"): ' appname
 read -p 'What domain do you want Hooker to be hosted on? (eg: "deploy.mysite.com"): ' fqdn
 
 # Call the CLI command (using sudo) to create the hosting environment.
-sudo conductor new $appname --fqdn="${fqdn}" --path="/"
+sudo conductor new $appname --fqdn="${fqdn}" --path="/" > /dev/null
+if [ $? -ne 0 ]; then
+    echo " ! Could not create an application hosting container using Conductor, exiting!"
+    exit 1
+fi
 
 # Git clone (as www-data user) to the /var/conductor/application/{name} directory
-sudo -u www-data git clone git@github.com:allebb/hooker.git /var/conductor/applications/$appname
+echo "Installing Hooker..."
+sudo -u www-data git clone https://github.com/allebb/hooker.git /var/conductor/applications/$appname
 sudo -u www-data git checkout stable
 
 # Copy the hooker.conf.example file to hooker.conf.php
@@ -49,4 +54,22 @@ fi
 # Restart the Nginx service to make the web service available.
 sudo service nginx restart
 echo "Installation complete!"
+echo ""
+
+echo "Now creating an SSH key (which should be used for automated Git functionality)..."
+sudo -u www-data mkdir /var/www/.ssh
+sudo -u www-data ssh-keygen -t rsa -b 2048 -C "hooker@${fqdn}" -f /var/www/.ssh/id_rsa -q > /dev/null
+if [ $? -ne 0 ]; then
+    echo " ! Could not create an SSH key, please create one manually for the www-data user!"
+    exit 0
+fi
+
+echo ""
+echo "Your SSH key has now been generated, you should copy and paste this key (/var/www/.ssh/id_rsa) to your"
+echo "GitHub and/or other online version control systems that Hooker needs to connect with using SSH."
+echo ""
+echo "You can output the contents of your public key by running:"
+echo ""
+echo "    cat /var/www/.ssh/id_rsa.pub"
+echo ""
 exit 0
