@@ -21,7 +21,7 @@ return [
             //  'cd {{local-repo}} && {{git-bin}} reset --hard HEAD && {{git-bin}} pull',
             //],
             'post_commands' => [
-                'cd {{local-repo}} && {{php-bin}} {{composer-bin}} install --no-dev --no-suggest --no-progress --prefer-dist --optimize-autoloader',
+                'cd {{local-repo}} && {{php-bin}} {{composer-bin}} install --no-dev --no-progress --prefer-dist --optimize-autoloader',
                 'chmod 755 {{local-repo}}/storage',
                 '{{php-bin}} {{local-repo}}/artisan migrate --force',
                 '{{php-bin}} {{local-repo}}/artisan config:cache',

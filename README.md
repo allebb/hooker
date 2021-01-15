@@ -41,6 +41,13 @@ our ``hooker.php`` file:
 sudo -u www-data mkdir /var/www/hooker
 ```
 
+We will now create a cache directory for Composer, this will speed up package installs (if you intend to use it):
+
+```shell
+sudo mkdir /var/www/.cache
+sudo chown -R www-data:www-data /var/www/.cache
+```
+
 We'll use Git to download the latest (stable) version (we'll also be able to use ``sudo -u www-data git pull`` in future
 to apply updates):
 
@@ -121,7 +128,7 @@ return [
             //    // You can of course run other tasks here too, shell scripts, npm, nodejs etc. etc.
             //],
             'post_commands' => [
-                'cd {{local-repo}} && {{php-bin}} {{composer-bin}} install --no-dev --no-suggest --no-progress --prefer-dist --optimize-autoloader',
+                'cd {{local-repo}} && {{php-bin}} {{composer-bin}} install --no-dev --no-progress --prefer-dist --optimize-autoloader',
                 'chmod 755 {{local-repo}}/storage',
                 '{{php-bin}} {{local-repo}}/artisan migrate --force',
                 '{{php-bin}} {{local-repo}}/artisan config:cache',

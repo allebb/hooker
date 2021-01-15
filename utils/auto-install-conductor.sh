@@ -34,6 +34,10 @@ cd /var/conductor/applications/$appname
 sudo -u www-data git clone https://github.com/allebb/hooker.git .
 sudo -u www-data git checkout stable
 
+# Configure a cache directory for Composer.
+sudo mkdir /var/www/.cache
+sudo chown -R www-data:www-data /var/www/.cache
+
 # Copy the hooker.conf.example file to hooker.conf.php
 sudo -u www-data cp /var/conductor/applications/$appname/hooker.conf.example-clean.php /var/conductor/applications/$appname/hooker.conf.php
 
