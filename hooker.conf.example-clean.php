@@ -11,7 +11,7 @@ return [
         'first_application' => [
             'key' => 'SomeRandomStringThatMustBePresentInTheKeyParam',
             'local_repo' => '/var/www/html-website',
-            'git_ssh_key_path' => '/var/www/.ssh/first_application.deploykey', // If using Conductor, you can easily generate one by running `conductor genkey {appname}`
+            'git_ssh_key_path' => '/var/www/.ssh/html-website.deploykey', // If using Conductor, you can easily generate one by running `conductor genkey {appname}`
             'is_github' => true,
             'branch' => 'master',
             'pre_commands' => [
@@ -19,7 +19,7 @@ return [
                 '{{php-bin}} {{local-repo}}/artisan config:clear',
             ],
             //'deploy_commands' => [
-            //  'cd {{local-repo}} && {{git-ssh-key}}{{git-bin}} reset --hard HEAD && {{git-bin}} pull',
+            //  'cd {{local-repo}} && {{git-bin}} reset --hard HEAD && {{git-ssh-key}}{{git-bin}} pull',
             //],
             'post_commands' => [
                 'cd {{local-repo}} && {{php-bin}} {{composer-bin}} install --no-dev --no-progress --prefer-dist --optimize-autoloader',
@@ -38,7 +38,8 @@ return [
         // This example uses a local ``hooker.json`` for it's workflow configuration (this must be present in the root of your Git repository).
         'second_application' => [
             'key' => 'VgUjbEIPbOCpiRQa2UHjqiXcmbE8eIht',
-            'local_repo' => '/var/www/second_application',
+            'local_repo' => '@conductor', // This will auto-resolve to /var/conductor/applications/second_application
+            'git_ssh_key_path' => '@conductor', // This will auto-resolve and use the private key at /var/www/.ssh/second_application.deploykey
             'is_github' => false,
             'branch' => 'deploy-prod',
             'use_json' => 'true',

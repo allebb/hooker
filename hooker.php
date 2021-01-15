@@ -60,8 +60,8 @@ $config = [
      * Deployment commands.
      */
     'deploy_commands' => [
-        'cd {{local-repo}} && {{git-ssh-key}}{{git-bin}} reset --hard HEAD && {{git-bin}} pull',
-        //'cd {{local-repo}} && sudo -u {{user}} {{git-ssh-key}}{{git-bin}} reset --hard HEAD && sudo -u {{user}} {{git-bin}} pull',
+        'cd {{local-repo}} && {{git-bin}} reset --hard HEAD && {{git-ssh-key}}{{git-bin}} pull',
+        //'cd {{local-repo}} && sudo -u {{user}} {{git-bin}} reset --hard HEAD && sudo -u {{user}} {{git-ssh-key}}{{git-bin}} pull',
     ],
 
     /**
@@ -345,7 +345,7 @@ function replaceCommandPlaceHolders($config)
 {
     $command_array = [];
     $cmd_tags = [
-        '{{local-repo}}' => $config['local_repo'],
+        '{{local-repo}}' => buildLocalRepoPath($config['local_repo']),
         '{{user}}' => $config['user'],
         '{{git-bin}}' => $config['git_bin'],
         '{{git-ssh-key}}' => buildSshKeyExportVariable($config['git_ssh_key_path']),
@@ -396,12 +396,32 @@ function checkIpAuth($config)
 }
 
 /**
+ * Constructs the local path to the application hosted directory.
+ * @param $path
+ * @return string
+ */
+function buildLocalRepoPath($path)
+{
+    $search = '@conductor';
+    $conductor_app_path = '/var/conductor/applications/' . $_GET['app'];
+
+    if (!preg_match("/{$search}/i", strtolower($path))) {
+        return $path;
+    }
+    return rtrim(str_replace($search, $conductor_app_path));
+}
+
+/**
  * Constructs the GIT_SSH_COMMAND export string if a valid key file has been found.
  * @param string $keyfile
  * @return string
  */
 function buildSshKeyExportVariable($keyfile = '')
 {
+    if (strtolower($keyfile) == '@conductor') {
+        $keyfile = '/var/www/.ssh/' . $_GET['app'] . '.deploykey';
+    }
+
     if (file_exists($keyfile)) {
         return "GIT_SSH_COMMAND='ssh -i \"{$keyfile}\" -o IdentitiesOnly=yes' ";
     }

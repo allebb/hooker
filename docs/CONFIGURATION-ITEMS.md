@@ -57,6 +57,11 @@ Default: ``\_\_DIR\_\_``
 Description: Sets the local repository URL (where to run the Git commands from, by default ``\_\_DIR\_\_`` uses the same
 directory as the hooker.php file) and therefore, out of the box this is configured for single site deployments.
 
+**If you are using Conductor, you can set this value to ``@conductor`` and the local path to your application will
+automatically be resolved (as long as the ``app name`` matches your Conductor application directory). If you are using a 
+sub-directory for your Nginx ``root`` path (such as Laravel uses  the ``/public`` directory) as the entry point for the
+application you can set this value to ``@conductor/public`` and this will resolve accordingly.**
+
 ### user
 
 Type: ``string``
@@ -169,6 +174,9 @@ Description: You can set this value to provide a specific deployment (private) k
 
 If one is not specified (the value is empty), Git will automatically use the default ``/var/www/.ssh/id_rsa`` key when communicating with any SSH servers that require key based authentication as the generated
 placeholder will return an empty string and thus omit exporting the runtime variable.
+
+**If you are using Conductor, you can set this value to ``@conductor`` and the path will automatically be resolved, it is important to note
+that your ``app name`` which you defined in the hooker configuration must match your Conductor-hosted app name.**
 
 If you have Conductor installed on your server you can easily generate a key for your website/application by running the following command:
 

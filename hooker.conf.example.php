@@ -37,7 +37,7 @@ return [
             //    // Uses the default (inherited deployment commands)
             //],
             //'deploy_commands' => [
-            //    // Uses the default (inherited deployment commands eg. cd {{local-repo}} && {{git-ssh-key}}{{git-bin}} reset --hard HEAD && {{git-bin}} pull)
+            //    // Uses the default (inherited deployment commands eg. cd {{local-repo}} && {{git-bin}} reset --hard HEAD && {{git-ssh-key}}{{git-bin}} pull)
             //],
             //'post_commands' => [
             //    // Uses the default (inherited deployment commands)
@@ -47,8 +47,8 @@ return [
         // An example Laravel Deployment Configuration (Webhook example: http://deploy.mysite.com/hooker.php?app=my_other_website&key=32c9f55eea8526374731acca13c81aca)
         'my_other_website' => [
             'key' => '32c9f55eea8526374731acca13c81aca',
-            'local_repo' => '/var/www/my-other-website',
-            'git_ssh_key_path' => '/var/www/.ssh/html-website.deploykey',
+            'local_repo' => '@conductor', // This will auto-resolve to /var/conductor/applications/my_other_website
+            'git_ssh_key_path' => '@conductor', // This will auto-resolve and use the private key at /var/www/.ssh/my_other_website.deploykey
             'user' => false,
             'php_bin' => '/usr/bin/php8.0',
             // Override the "default" PHP version used for this deployment/running Composer, this application needs PHP 8.0!
@@ -58,7 +58,7 @@ return [
                 '{{php-bin}} {{local-repo}}/artisan config:clear', // We'll also clear the configuration cache before we pull the latest code from Git..
             ],
             //'deploy_commands' => [
-            //    // Uses the default (inherited deployment command eg. cd {{local-repo}} && {{git-bin}} reset --hard HEAD && {{git-bin}} pull)
+            //    // Uses the default (inherited deployment command eg. cd {{local-repo}} && {{git-bin}} reset --hard HEAD && {{git-ssh-key}}{{git-bin}} pull)
             //    // You can of course run other tasks here too, shell scripts, npm, nodejs etc. etc.
             //],
             'post_commands' => [
@@ -74,10 +74,11 @@ return [
             ],
         ],
 
-        // An example Laravel Deployment Configuration using a local "hooker.json" repository configuration. (Webhook example: http://deploy.mysite.com/hooker.php?app=another_application&key=VgUjbEIPbOCpiRQa2UHjqiXcmbE8eIht)
+        // An example Configuration using a local "hooker.json" repository configuration. (Webhook example: http://deploy.mysite.com/hooker.php?app=another_application&key=VgUjbEIPbOCpiRQa2UHjqiXcmbE8eIht)
         'another_application' => [
             'key' => 'VgUjbEIPbOCpiRQa2UHjqiXcmbE8eIht',
-            'local_repo' => '/var/www/another_application',
+            'local_repo' => '@conductor', // This will auto-resolve to /var/conductor/applications/another_application
+            'git_ssh_key_path' => '@conductor', // This will auto-resolve and use the private key at /var/www/.ssh/another_application.deploykey
             'use_json' => 'true', // This will read the configuration from a hooker.json file stored in your git repo. eg. /var/www/another_application/hooker.json
         ],
 

@@ -104,7 +104,7 @@ return [
             //    // Uses the default (inherited deployment commands)
             //],
             //'deploy_commands' => [
-            //    // Uses the default (inherited deployment commands eg. cd {{local-repo}} && {{git-bin}} reset --hard HEAD && {{git-bin}} pull)
+            //    // Uses the default (inherited deployment commands eg. cd {{local-repo}} && {{git-bin}} reset --hard HEAD && {{git-ssh-key}}{{git-bin}} pull)
             //],
             //'post_commands' => [
             //    // Uses the default (inherited deployment commands)
@@ -114,7 +114,8 @@ return [
         // An example Laravel Deployment Configuration (Webhook example: http://deploy.mysite.com/hooker.php?app=my_other_website&key=32c9f55eea8526374731acca13c81aca)
         'my_other_website' => [
             'key' => '32c9f55eea8526374731acca13c81aca',
-            'local_repo' => '/var/www/my-other-website',
+            'local_repo' => '@conductor', // This will auto-resolve to /var/conductor/applications/my_other_website
+            'git_ssh_key_path' => '@conductor', // Optional - This will auto-resolve and use the Conductor generated private (deployment) key at /var/www/.ssh/my_other_website.deploykey
             'user' => false,
             'php_bin' => '/usr/bin/php8.0',
             // Override the "default" PHP version used for this deployment/running Composer, this application needs PHP 8.0!
@@ -144,6 +145,7 @@ return [
         'another_application' => [
             'key' => 'VgUjbEIPbOCpiRQa2UHjqiXcmbE8eIht',
             'local_repo' => '/var/www/another_application',
+            'git_ssh_key_path' => '/var/www/.ssh/id_rsa', // Optional - We can set a private (deployment key) that will be used when git makes requests.
             'use_json' => 'true', // This will read the configuration from a hooker.json file stored in your git repo. eg. /var/www/another_application/hooker.json
         ],
 
@@ -152,9 +154,11 @@ return [
 ];
 ```
 
-### Create an SSH profile for the www-data user and generate your "Deploy Key"
+### Create an SSH keypair for the www-data user
 
-Lets change into the ``www-data`` user's home directory:
+**This section is optional and only required if you need to pull from private repositories and don't wish to generate deployment keys on an application by application basis (using ``conductor genkey {app_name}`` or manually).**
+
+Let's change into the ``www-data`` user's home directory:
 
 ```shell
 cd /var/www
@@ -180,7 +184,7 @@ sudo -u www-data ssh-keygen -t rsa -b 4096
 ```
 
 The contents of the public key (``/var/www/.ssh/id_rsa.pub``) now needs to be copied and added to your Git hosting
-provider's "Deploy keys" section:
+provider's SSH keys section:
 
 ```shell
 cat /var/www/.ssh/id_rsa.pub
