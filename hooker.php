@@ -22,6 +22,12 @@ $config = [
     'key' => false,
 
     /**
+     * Set an optional SSH deployment key path (private key)
+     * Example: /var/www/.ssh/my-app.deploykey
+     */
+    'git_ssh_key_path' => '',
+
+    /**
      * The remote repository to pull/checkout form.
      * Example: git@github.com:allebb/test-website.git
      * @todo Project currently does not make use of this setting but is reserved for future functionality.
@@ -54,8 +60,8 @@ $config = [
      * Deployment commands.
      */
     'deploy_commands' => [
-        'cd {{local-repo}} && {{git-bin}} reset --hard HEAD && {{git-bin}} pull',
-        //'cd {{local-repo}} && sudo -u {{user}} {{git-bin}} reset --hard HEAD && sudo -u {{user}} {{git-bin}} pull',
+        'cd {{local-repo}} && {{git-ssh-key}}{{git-bin}} reset --hard HEAD && {{git-bin}} pull',
+        //'cd {{local-repo}} && sudo -u {{user}} {{git-ssh-key}}{{git-bin}} reset --hard HEAD && sudo -u {{user}} {{git-bin}} pull',
     ],
 
     /**
@@ -129,7 +135,7 @@ $config = [
  *
  */
 
-const HOOKER_VERSION = "2.0.0";
+const HOOKER_VERSION = "2.0.1";
 
 const HTTP_OK = 200;
 const HTTP_UNAUTHORISED = 401;
@@ -183,6 +189,7 @@ $config = array_merge([
     'user' => $config['user'],
     'use_json' => $config['use_json'],
     'git_bin' => $config['git_bin'],
+    'git_ssh_key_path' => $config['git_ssh_key_path'],
     'php_bin' => $config['php_bin'],
     'composer_bin' => $config['composer_bin'],
     'is_github' => $config['is_github'],
@@ -341,6 +348,7 @@ function replaceCommandPlaceHolders($config)
         '{{local-repo}}' => $config['local_repo'],
         '{{user}}' => $config['user'],
         '{{git-bin}}' => $config['git_bin'],
+        '{{git-ssh-key}}' => buildSshKeyExportVariable($config['git_ssh_key_path']),
         '{{php-bin}}' => $config['php_bin'],
         '{{composer-bin}}' => $config['composer_bin'],
         '{{branch}}' => $config['branch'],
@@ -385,6 +393,19 @@ function checkIpAuth($config)
         outputLog($config, true);
     }
     debugLog("IP ({$remote_ip}) authorised by whitelist.", $config['debug']);
+}
+
+/**
+ * Constructs the GIT_SSH_COMMAND export string if a valid key file has been found.
+ * @param string $keyfile
+ * @return string
+ */
+function buildSshKeyExportVariable($keyfile = '')
+{
+    if (file_exists($keyfile)) {
+        return "GIT_SSH_COMMAND='ssh -i \"{$keyfile}\" -o IdentitiesOnly=yes' ";
+    }
+    return "";
 }
 
 /**

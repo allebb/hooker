@@ -159,11 +159,29 @@ Default: ``git``
 Description: The full path to the Git binary on the server (if your PATH is set correctly, the default ``git`` should
 work fine!)
 
+### git_ssh_key_path
+
+Type: ``string``
+
+Default ``empty``
+
+Description: You can set this value to provide a specific deployment (private) key that will be used when making Git SSH requests (this will dynamically populate the ``{{git-ssh-key}}`` placeholder).
+
+If one is not specified (the value is empty), Git will automatically use the default ``/var/www/.ssh/id_rsa`` key when communicating with any SSH servers that require key based authentication as the generated
+placeholder will return an empty string and thus omit exporting the runtime variable.
+
+If you have Conductor installed on your server you can easily generate a key for your website/application by running the following command:
+
+```shell
+conductor genkey {appname}
+```
+
+
 ### php_bin
 
 Type: ``string``
 
-Default: ``php``
+Default: ``/usr/bin/php``
 
 Description: The full path to the PHP binary on the server (if your PATH is set correctly, the default ``php`` should
 work fine!). This setting is extremely useful if you are trying to deploy an application which requirements for older or
@@ -204,6 +222,19 @@ The ``{{user}}`` tag will output the currently set ``user`` configuration option
 
 The ``{{git-bin}}`` tag will output the path to the Git binary (eg. ``/usr/bin/git``) using the ``git_bin``
 configuration option value.
+
+### {{git-ssh-key}}
+
+The ``{{git-ssh-key}}`` tag will dynamically generate the required export values to specify a private key on your server to authenticate with when
+pulling code with Git.
+
+If one is not specified, Git will automatically use the default ``/var/www/.ssh/id_rsa`` key when communicating with any SSH servers that require key based authentication.
+
+If you have Conductor installed on your server you can easily generate a key for your website/application by running the following command:
+
+```shell
+conductor genkey {appname}
+```
 
 ### {{php-bin}}
 
