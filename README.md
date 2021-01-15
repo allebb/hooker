@@ -29,7 +29,7 @@ with the ``app`` parameter eg. ``https://deploy.mysite.com/hooker.php?app=websit
 **If you have set up your server using [Conductor](https://github.com/allebb/conductor) you can automatically install Hooker by running this simple command:**
 
 ```shell
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/allebb/hooker/stable/utils/auto-install-conductor.sh)"
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/allebb/hooker/stable/utils/auto-install-conductor.sh)"
 ```
 
 #### Creating the new virtualhost directory
