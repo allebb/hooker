@@ -30,20 +30,22 @@ fi
 
 # Git clone (as www-data user) to the /var/conductor/application/{name} directory
 echo "Installing Hooker..."
-sudo -u www-data git clone https://github.com/allebb/hooker.git /var/conductor/applications/$appname
+cd /var/conductor/applications/$appname
+sudo -u www-data git clone https://github.com/allebb/hooker.git .
 sudo -u www-data git checkout stable
 
 # Copy the hooker.conf.example file to hooker.conf.php
-sudo -u www-data cp /var/conductor/applications/$appname/hooker.example.php /var/conductor/applications/$appname/hooker.conf.php
-
-# Update the FQDN in the virtualhost configuration file
-sudo sed -i "s|__FQDN__|$fqdn|" /etc/conductor/configs/$appname.conf
+sudo -u www-data cp /var/conductor/applications/$appname/hooker.conf.example-clean.php /var/conductor/applications/$appname/hooker.conf.php
 
 # Copy the default Nginx virtualhost configuration to the Conductor application configuration...
 sudo cp /var/conductor/applications/$appname/utils/auto-install-conductor_nginx.conf /etc/conductor/configs/$appname.conf
 
+# Update the FQDN in the virtualhost configuration file
+sudo sed -i "s/__FQDN__/${fqdn}/g" /etc/conductor/configs/$appname.conf
+sudo sed -i "s/__APPNAME__/${appname}/g" /etc/conductor/configs/$appname.conf
+
 # Test that the Nginx configuration passes validation...
-sudo nginx -t
+sudo nginx -t > /dev/null
 if [ $? -eq 0 ]; then
     echo " * Nginx configuration passes validation..."
 else
@@ -53,23 +55,34 @@ fi
 
 # Restart the Nginx service to make the web service available.
 sudo service nginx restart
-echo "Installation complete!"
 echo ""
 
 echo "Now creating an SSH key (which should be used for automated Git functionality)..."
-sudo -u www-data mkdir /var/www/.ssh
-sudo -u www-data ssh-keygen -t rsa -b 2048 -C "hooker@${fqdn}" -f /var/www/.ssh/id_rsa -q > /dev/null
+sudo mkdir /var/www/.ssh
+sudo chown www-data:www-data -R /var/www/.ssh
+sudo -u www-data ssh-keygen -t rsa -b 2048 -N "" -C "hooker@${fqdn}" -q -f /var/www/.ssh/id_rsa > /dev/null
 if [ $? -ne 0 ]; then
     echo " ! Could not create an SSH key, please create one manually for the www-data user!"
-    exit 0
+else
+	echo ""
+	echo "Your SSH key has now been generated, you should copy and paste this key (/var/www/.ssh/id_rsa.pub) to your"
+	echo "GitHub and/or other online version control systems that Hooker needs to connect with using SSH."
+	echo ""
+	echo "You can view the contents of the public key file by running:"
+	echo ""
+	echo "    cat /var/www/.ssh/id_rsa.pub"
+	echo ""
 fi
+sudo chmod -R 0700 /var/www/.ssh
 
+echo "You can now configure your workflows/deployments by updating the global Hooker configuration:"
 echo ""
-echo "Your SSH key has now been generated, you should copy and paste this key (/var/www/.ssh/id_rsa) to your"
-echo "GitHub and/or other online version control systems that Hooker needs to connect with using SSH."
+echo "    vi /var/conductor/applications/${appname}/hooker.conf.php"
 echo ""
-echo "You can output the contents of your public key by running:"
+echo "Use the following URL format for triggering deployments on this server:"
 echo ""
-echo "    cat /var/www/.ssh/id_rsa.pub"
+echo "    http(s)://${fqdn}/hooker.php?app=[YOUR_APP_NAME]&key=[YOUR_SECRET_KEY]"
 echo ""
+echo ""
+echo "Installation complete!"
 exit 0
