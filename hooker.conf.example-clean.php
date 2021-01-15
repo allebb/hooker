@@ -4,7 +4,7 @@
  * Hooker Configuration File
  */
 return [
-
+    'ip_whitelist' => [],
     'sites' => [
 
         // (Webhook example: http://deploy.mysite.com/hooker.php?app=first_application&key=SomeRandomWordThatMustBePresentInTheKeyParam).

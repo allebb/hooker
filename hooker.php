@@ -171,32 +171,30 @@ debugLog("Git version detected: {$git_output}", $config['debug']);
 
 
 $application = (isset($_GET['app'])) ? $_GET['app'] : false;
-if ($application) {
-    if (isset($config['sites'][$application])) {
-        $config = array_merge([
-            'debug' => $config['debug'],
-            'key' => $config['key'],
-            'user' => $config['user'],
-            'use_json' => $config['use_json'],
-            'git_bin' => $config['git_bin'],
-            'php_bin' => $config['php_bin'],
-            'composer_bin' => $config['composer_bin'],
-            'is_github' => $config['is_github'],
-            'github_deploy_events' => $config['github_deploy_events'],
-            'is_bitbucket' => $config['is_bitbucket'],
-            'bitbucket_deploy_events' => $config['bitbucket_deploy_events'],
-            'ip_whitelist' => $config['ip_whitelist'],
-            'pre_commands' => $config['pre_commands'],
-            'deploy_commands' => $config['deploy_commands'],
-            'post_commands' => $config['post_commands'],
-        ], $config['sites'][$application]);
-        debugLog("Application configuration detected and being used!", $config['debug']);
-    } else {
-        debugLog("The requested site/application ({$application}) configuration was not found!", $config['debug']);
-        setStatusCode(HTTP_NOTFOUND);
-        outputLog($config, true);
-    }
+if (!$application || !isset($config['sites'][$application])) {
+    debugLog("The requested site/application ({$application}) configuration was not found!", $config['debug']);
+    setStatusCode(HTTP_NOTFOUND);
+    outputLog($config, true);
 }
+
+$config = array_merge([
+    'debug' => $config['debug'],
+    'key' => $config['key'],
+    'user' => $config['user'],
+    'use_json' => $config['use_json'],
+    'git_bin' => $config['git_bin'],
+    'php_bin' => $config['php_bin'],
+    'composer_bin' => $config['composer_bin'],
+    'is_github' => $config['is_github'],
+    'github_deploy_events' => $config['github_deploy_events'],
+    'is_bitbucket' => $config['is_bitbucket'],
+    'bitbucket_deploy_events' => $config['bitbucket_deploy_events'],
+    'ip_whitelist' => $config['ip_whitelist'],
+    'pre_commands' => $config['pre_commands'],
+    'deploy_commands' => $config['deploy_commands'],
+    'post_commands' => $config['post_commands'],
+], $config['sites'][$application]);
+debugLog("Application configuration detected and being used!", $config['debug']);
 
 checkIpAuth($config);
 checkKeyAuth($config);
@@ -260,7 +258,8 @@ if ($config['is_bitbucket']) {
 
 foreach (replaceCommandPlaceHolders($config) as $execute) {
     $exec_output = trim(executeAndCaptureOutput($execute));
-    debugLog("RUN [{$execute}]" . PHP_EOL . ":::::    RESULT    :::::" . PHP_EOL . $exec_output . PHP_EOL . "::::::::::::::::::::::::", $config['debug']);
+    debugLog("RUN [{$execute}]" . PHP_EOL . ":::::    RESULT    :::::" . PHP_EOL . $exec_output . PHP_EOL . "::::::::::::::::::::::::",
+        $config['debug']);
 }
 
 outputLog($config);
