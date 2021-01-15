@@ -58,9 +58,7 @@ Description: Sets the local repository URL (where to run the Git commands from, 
 directory as the hooker.php file) and therefore, out of the box this is configured for single site deployments.
 
 **If you are using Conductor, you can set this value to ``@conductor`` and the local path to your application will
-automatically be resolved (as long as the ``app name`` matches your Conductor application directory). If you are using a 
-sub-directory for your Nginx ``root`` path (such as Laravel uses  the ``/public`` directory) as the entry point for the
-application you can set this value to ``@conductor/public`` and this will resolve accordingly.**
+automatically be resolved (as long as the ``app name`` matches your Conductor application directory name).**
 
 ### user
 
@@ -220,7 +218,7 @@ at run-time, these are as follows:
 ### {{local-repo}}
 
 The ``{{local-repo}}`` tag will output the site hosting directory (eg. ``/var/www/mysite``) as set in the ``local_repo``
-configuration option value.
+configuration option value. If you are using Conductor you can set this value to ``@conductor`` and the path will automatically be resolved using the ``app name``.
 
 ### {{user}}
 

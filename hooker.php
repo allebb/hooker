@@ -402,13 +402,10 @@ function checkIpAuth($config)
  */
 function buildLocalRepoPath($path)
 {
-    $search = '@conductor';
-    $conductor_app_path = '/var/conductor/applications/' . $_GET['app'];
-
-    if (!preg_match("/{$search}/i", strtolower($path))) {
-        return $path;
+    if (strtolower($path) == '@conductor') {
+        return '/var/conductor/applications/' . $_GET['app'];
     }
-    return rtrim(str_replace($search, $conductor_app_path));
+    return $path;
 }
 
 /**
