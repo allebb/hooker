@@ -299,6 +299,7 @@ the syntax is as follows:
     "{{php-bin}} {{local-repo}}/artisan config:cache",
     "{{php-bin}} {{local-repo}}/artisan cache:clear",
     "{{php-bin}} {{local-repo}}/artisan route:cache",
+    "{{php-bin}} {{local-repo}}/artisan view:cache",
     "{{php-bin}} {{local-repo}}/artisan up"
   ]
 }
@@ -316,9 +317,9 @@ from your repository and only then, on the next execution will it use the latest
 **For this to work, your Hooker configuration file MUST specify the ``local_repo`` and ``key`` properties
 in addition, the ``use_json`` property must also be set to ``true``.**
 
-For security reasons, when using a ``.hooker.json`` file some overrides are not available and will need to be set in the
+For security  reasons, when using a ``.hooker.json`` file some overrides are not available and will need to be set in the
 main Hooker web service configuration file (``hooker.conf.php``). These settings are: ``remote_repo``, ``branch``
-, ``local_repo``, ``key`` and ``user``.
+, ``local_repo``, ``key``, ``disable_init`` and ``user``.
 
 ## Configuring Services to use Hooker
 
@@ -335,10 +336,10 @@ services.
 Getting your sites and web applications to deploy using GitHub web hooks is super easy - You can very easily (and
 quickly) have your code automatically deployed to your server (or group of servers) by simply adding a GitHub web hook.
 
-When I've needed to do quick and simple automated deployments, I'll create a separate Git branch called "deploy-prod" (
-or "deploy-test") and then set up a GitHub webhook.
+When I've needed setup quick and simple automated deployments, I'll create a separate Git branch called "deploy-prod" (
+or "deploy-test") and then set up a GitHub webhook to trigger these deployments using Hooker.
 
-If you wish to use this simple method for having your sites or applications automatically deploy ensure that you setup
+If you wish to use this simple method for having your sites or applications automatically deploy ensure that you set up
 the GitHub webhook as follows:
 
 In your ``hooker.conf.php`` file make sure that you have these (``is_github`` and ``branch``) settings:
@@ -348,6 +349,7 @@ In your ``hooker.conf.php`` file make sure that you have these (``is_github`` an
     'my-example-webapp' => [
         ...
         'key' => 'MyRandomDeploymentKey',
+        'remote_repo' => 'git@github.com:allebb/example.git',
         'is_github' => true, // Using GitHub webhooks to trigger this workflow.
         'branch' => 'deploy-prod', // As long as the GitHub webhook request relates to changes on this git branch, we'll run the deployment workflow!
         ...
@@ -362,7 +364,7 @@ specify the **Content type** as ``application/json`` as shown here:
 ![GitHub web hook configuration](https://blog.bobbyallen.me/wp-content/uploads/2021/01/Screenshot-2021-01-14-at-18.48.14.png "Example GitHub webhook configuration.")
 
 When you push to the configured branch, GitHub will trigger a deployment to our server using this web hook URL. You can
-view the output of the deployment process from this screen too as as long as you have the ``debug`` option set
+view the output of the deployment process from this screen too as long as you have the ``debug`` option set
 to ``true`` in your Hooker configuration you will be able to see the output (result) of each of your workflow/deployment
 steps.
 

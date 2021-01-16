@@ -28,9 +28,8 @@ $config = [
     'git_ssh_key_path' => '',
 
     /**
-     * The remote repository to pull/checkout form.
+     * The remote repository (SSH URI) to checkout code form (used in the default `init_commands`).
      * Example: git@github.com:allebb/test-website.git
-     * @todo Project currently does not make use of this setting but is reserved for future functionality.
      */
     'remote_repo' => '',
 
@@ -43,13 +42,22 @@ $config = [
     /**
      * Local repository/hosted directory.
      */
-    'local_repo' => __DIR__,
+    'local_repo' => '/tmp',
 
     /**
      * Set a specific user to run the pre, deploy and post commands with (if false will run as the current user, normally 'www-data')
      * Example: jbloggs
      */
     'user' => false,
+
+    /**
+     * Initialise commands to run .
+     */
+    'init_commands' => [
+        'rm -Rf {{local-repo}}/* && rm -Rf {{local-repo}}/.* > /dev/null',
+        '{{git-ssh-key}}{{git-bin}} -C {{local-repo}} clone {{remote-repo}} .',
+        '{{git-bin}} -C {{local-repo}} checkout {{branch}}',
+    ],
 
     /**
      * Pre-deploy commands to run.
@@ -135,10 +143,11 @@ $config = [
  *
  */
 
-const HOOKER_VERSION = "2.0.3";
+const HOOKER_VERSION = "2.1.0";
 
 const HTTP_OK = 200;
 const HTTP_UNAUTHORISED = 401;
+const HTTP_FORBIDDEN = 403;
 const HTTP_NOTFOUND = 404;
 const HTTP_ERROR = 500;
 
@@ -203,7 +212,9 @@ $config = array_merge([
     'github_deploy_events' => $config['github_deploy_events'],
     'is_bitbucket' => $config['is_bitbucket'],
     'bitbucket_deploy_events' => $config['bitbucket_deploy_events'],
+    'disable_init' => $config['disable_init'],
     'ip_whitelist' => $config['ip_whitelist'],
+    'init_commands' => $config['init_commands'],
     'pre_commands' => $config['pre_commands'],
     'deploy_commands' => $config['deploy_commands'],
     'post_commands' => $config['post_commands'],
@@ -234,6 +245,25 @@ debugLog(" * Git: {$config['git_bin']}", $config['debug']);
 debugLog(" * PHP: {$config['php_bin']}", $config['debug']);
 debugLog(" * Composer: {$config['composer_bin']}", $config['debug']);
 
+if (isset($_GET['init'])) {
+    if ($config['disable_init']) {
+        setStatusCode(HTTP_FORBIDDEN);
+        debugLog("The Hooker configuration prevents initialisation for this application, first enable it and try again!",
+            $config['debug']);
+        outputLog($config, true);
+    }
+
+    debugLog("Local initialisation has been requested, running the initialisation commands...", $config['debug']);
+    foreach (replaceCommandPlaceHolders($config, $config['init_commands']) as $execute) {
+        $exec_output = trim(executeAndCaptureOutput($execute));
+        debugLog("RUN [{$execute}]" . PHP_EOL . ":::::    RESULT    :::::" . PHP_EOL . $exec_output . PHP_EOL . "::::::::::::::::::::::::",
+            $config['debug']);
+    }
+    debugLog("Local initialisation has been completed!", $config['debug']);
+    setStatusCode(HTTP_OK);
+    outputLog($config, true);
+}
+
 if ($config['is_github']) {
     debugLog("Repository flagged as GitHub hosted.", $config['debug']);
     if (!in_array(requestHeader('X-Github-Event'), $config['github_deploy_events'])) {
@@ -245,11 +275,14 @@ if ($config['is_github']) {
     if (requestHeader('Content-Type') == 'application/json') {
         $payload = json_decode(file_get_contents('php://input'), true);
         if (!$payload) {
+            setStatusCode(HTTP_ERROR);
             debugLog("Unable to decode the JSON payload, check that the webhook is configured to use `application/json` as the Content type, skipping branch matching...",
                 $config['debug']);
+            outputLog($config, true);
         }
 
         if (!isset($payload['ref']) || $payload['ref'] !== 'refs/heads/' . $config['branch']) {
+            setStatusCode(HTTP_OK);
             debugLog("Branch matching failed, configuration checking for '" . 'refs/heads/' . $config['branch'] . "' but GitHub sent: " . $payload['ref'] . "' instead! Skipping this deployment!",
                 $config['debug']);
             debugLog("Skipping this deployment!", $config['debug']);
@@ -264,18 +297,22 @@ if ($config['is_github']) {
 if ($config['is_bitbucket']) {
     debugLog("Repository flagged as BitBucket hosted.", $config['debug']);
     if (!in_array(requestHeader('X-Event-Key'), $config['bitbucket_deploy_events'])) {
+        setStatusCode(HTTP_OK);
         debugLog("The BitBucket hook event (" . requestHeader('X-Event-Key') . ") was not found in the 'bitbucket_deploy_events' list, skipping the deployment!",
             $config['debug']);
         outputLog($config, true);
     }
 }
 
-foreach (replaceCommandPlaceHolders($config) as $execute) {
+foreach (
+    replaceCommandPlaceHolders($config,
+        array_merge($config['pre_commands'], $config['deploy_commands'], $config['post_commands'])) as $execute
+) {
     $exec_output = trim(executeAndCaptureOutput($execute));
     debugLog("RUN [{$execute}]" . PHP_EOL . ":::::    RESULT    :::::" . PHP_EOL . $exec_output . PHP_EOL . "::::::::::::::::::::::::",
         $config['debug']);
 }
-
+setStatusCode(HTTP_OK);
 outputLog($config);
 echo "done!";
 
@@ -346,23 +383,24 @@ function requestHeader($key, $default = false)
 /**
  * In-line replacement of command tags.
  * @param array $config The configuration input array.
+ * @param array $commands Array of commands to process.
  * @return array The prepared command array.
  */
-function replaceCommandPlaceHolders($config)
+function replaceCommandPlaceHolders($config, $commands)
 {
     $command_array = [];
     $cmd_tags = [
         '{{local-repo}}' => buildLocalRepoPath($config['local_repo']),
+        '{{remote-repo}}' => $config['remote_repo'],
+        '{{branch}}' => $config['branch'],
         '{{user}}' => $config['user'],
         '{{git-bin}}' => $config['git_bin'],
         '{{git-ssh-key}}' => buildSshKeyExportVariable($config['git_ssh_key_path']),
         '{{php-bin}}' => $config['php_bin'],
         '{{composer-bin}}' => $config['composer_bin'],
-        '{{branch}}' => $config['branch'],
-        '{{repo}}' => $config['remote_repo'],
     ];
-    foreach (array_merge($config['pre_commands'], $config['deploy_commands'], $config['post_commands']) as $commands) {
-        $command_array[] = str_replace(array_keys($cmd_tags), $cmd_tags, $commands);
+    foreach ($commands as $cmds) {
+        $command_array[] = str_replace(array_keys($cmd_tags), $cmd_tags, $cmds);
     }
     return $command_array;
 }
@@ -395,8 +433,8 @@ function checkIpAuth($config)
         $remote_ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
     }
     if ((count($config['ip_whitelist']) > 0) && (!in_array($remote_ip, $config['ip_whitelist']))) {
-        debugLog("IP ({$remote_ip}) is not permitted on the whitelist, aborting deployment!", $config['debug']);
         setStatusCode(HTTP_UNAUTHORISED);
+        debugLog("IP ({$remote_ip}) is not permitted on the whitelist, aborting deployment!", $config['debug']);
         outputLog($config, true);
     }
     debugLog("IP ({$remote_ip}) authorised by whitelist.", $config['debug']);
@@ -490,6 +528,7 @@ function outputAsciiArtHeader($show = false)
 function loadLocalHookerConf($path, $baseConfiguration = [])
 {
     $disabledOverrides = [
+        'disable_init',
         'remote_repo',
         'local_repo',
         'branch',
@@ -503,6 +542,7 @@ function loadLocalHookerConf($path, $baseConfiguration = [])
 
     $localConfiguration = json_decode(file_get_contents($path), true);
     if (!$localConfiguration) {
+        setStatusCode(500);
         debugLog("The `.hooker.json` file syntax is invalid (it must be valid JSON), please fix and try again!", true);
         outputLog($baseConfiguration, true);
     }

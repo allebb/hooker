@@ -7,13 +7,20 @@ return [
     'ip_whitelist' => [],
     'sites' => [
 
-        // (Webhook example: http://deploy.mysite.com/hooker.php?app=first_application&key=SomeRandomWordThatMustBePresentInTheKeyParam).
+        // (Webhook example: http://deploy.mysite.com/hooker.php?app=first_application&key=SomeRandomWordThatMustBePresentInTheKeyParam&init=true).
         'first_application' => [
             'key' => 'SomeRandomStringThatMustBePresentInTheKeyParam',
             'local_repo' => '/var/www/html-website',
-            'git_ssh_key_path' => '/var/www/.ssh/html-website.deploykey', // If using Conductor, you can easily generate one by running `conductor genkey {appname}`
+            'git_ssh_key_path' => '/var/www/.ssh/html-website.deploykey',
+            // If using Conductor, you can easily generate one by running `conductor genkey {appname}`
             'is_github' => true,
+            'disable_init' => false,
             'branch' => 'master',
+            //'init_commands' => [
+            //    'rm -Rf {{local-repo}}/* && rm -Rf {{local-repo}}/.* > /dev/null',
+            //    '{{git-ssh-key}}{{git-bin}} -C {{local-repo}} clone {{remote-repo}} .',
+            //    '{{git-bin}} -C {{local-repo}} checkout {{branch}}',
+            //],
             'pre_commands' => [
                 '{{php-bin}} {{local-repo}}/artisan down',
                 '{{php-bin}} {{local-repo}}/artisan config:clear',
@@ -28,6 +35,7 @@ return [
                 '{{php-bin}} {{local-repo}}/artisan config:cache',
                 '{{php-bin}} {{local-repo}}/artisan cache:clear',
                 '{{php-bin}} {{local-repo}}/artisan route:cache',
+                "{{php-bin}} {{local-repo}}/artisan view:cache",
                 '{{php-bin}} {{local-repo}}/artisan up',
                 //'{{php-bin}} {{local-repo}}/artisan queue:restart', // Using a job queue? Restart it so it uses the latest version of your code!
                 //'{{php-bin}} {{local-repo}}/artisan horizon:terminate', // Using Horizon for your queues instead??
@@ -38,9 +46,13 @@ return [
         // This example uses a local ``.hooker.json`` for it's workflow configuration (this must be present in the root of your Git repository).
         'second_application' => [
             'key' => 'VgUjbEIPbOCpiRQa2UHjqiXcmbE8eIht',
-            'local_repo' => '@conductor', // This will auto-resolve to /var/conductor/applications/second_application
-            'git_ssh_key_path' => '@conductor', // This will auto-resolve and use the private key at /var/www/.ssh/second_application.deploykey
+            'local_repo' => '@conductor',
+            // This will auto-resolve to /var/conductor/applications/second_application
+            'git_ssh_key_path' => '@conductor',
+            // This will auto-resolve and use the private key at /var/www/.ssh/second_application.deploykey
             'is_github' => false,
+            'disable_init' => true,
+            // Prevent people (if they have the webhook URL) from re-initiating your application.
             'branch' => 'deploy-prod',
             'use_json' => 'true',
         ],

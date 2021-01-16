@@ -29,6 +29,7 @@ return [
         'my_example_website' => [
             'debug' => false, // Override and disable the output of debug info for this specific deployment workflow?
             'key' => 'SomeRandomStringThatMustBePresentInTheKeyParam',
+            'remote_repo' => 'git@github.com:allebb/my_example_website.git',
             'local_repo' => '/var/www/html-website', // Use current directory
             'is_github' => true, // Use GitHub webhooks to trigger this workflow.
             'branch' => 'master', // As long as the GitHub webhook request relates to changes on this git branch, we'll run the deployment workflow!
@@ -68,6 +69,7 @@ return [
                 '{{php-bin}} {{local-repo}}/artisan config:cache',
                 '{{php-bin}} {{local-repo}}/artisan cache:clear',
                 '{{php-bin}} {{local-repo}}/artisan route:cache',
+                "{{php-bin}} {{local-repo}}/artisan view:cache",
                 '{{php-bin}} {{local-repo}}/artisan up',
                 //'{{php-bin}} {{local-repo}}/artisan queue:restart', // Using a job queue? Restart it so it uses the latest version of your code!
                 //'{{php-bin}} {{local-repo}}/artisan horizon:terminate', // Using Horizon for your queues instead??
@@ -77,8 +79,10 @@ return [
         // An example Configuration using a local ".hooker.json" repository configuration. (Webhook example: http://deploy.mysite.com/hooker.php?app=another_application&key=VgUjbEIPbOCpiRQa2UHjqiXcmbE8eIht)
         'another_application' => [
             'key' => 'VgUjbEIPbOCpiRQa2UHjqiXcmbE8eIht',
+            'remote_repo' => 'git@github.com:allebb/another_application.git',
             'local_repo' => '@conductor', // This will auto-resolve to /var/conductor/applications/another_application
             'git_ssh_key_path' => '@conductor', // This will auto-resolve and use the private key at /var/www/.ssh/another_application.deploykey
+            'disable_init' => true, // Prevent people (if they have the webhook URL) from re-initiating your application by appending the ?init parameter.
             'use_json' => 'true', // This will read the configuration from a .hooker.json file stored in your git repo. eg. /var/www/another_application/.hooker.json
         ],
 

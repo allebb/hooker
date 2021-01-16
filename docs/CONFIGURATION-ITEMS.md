@@ -26,7 +26,7 @@ Default: false
 Description: When not set as ``false``, this string must match the ``key`` parameter when calling the webhook, this can
 be set globally (for all sites) or, set it individually on a per-site basis.
 
-Example: ``TPuR81cS0gwP2T``
+Example: ``nQ5v73AD5ZEEELXWzHjEyCnlAqJsH0xl``
 
 ### remote_repo
 
@@ -34,9 +34,9 @@ Type: ``string``
 
 Default: empty
 
-Description: This is currently not used but is reserved for future implementation.
+Description: The remote (SSH) repository URI.
 
-Example: ``git@github.com:bobsta63/test-website.git``
+Example: ``git@github.com:allebb/test-website.git``
 
 ### branch
 
@@ -60,6 +60,17 @@ directory as the hooker.php file) and therefore, out of the box this is configur
 **If you are using Conductor, you can set this value to ``@conductor`` and the local path to your application will
 automatically be resolved (as long as the ``app name`` matches your Conductor application directory name).**
 
+### disable_init
+
+Type: ``boolean``
+
+Default: ``false``
+
+Description: When set to ``true``, this will force the workflow steps inside the ``init_commands`` to execute,
+as long as the URL parameter ``init`` is appended to the deployment hook URL this is perfect for cloning 
+the remote repository and switching to the specified ``branch`` which, by default will be run unless you
+override the ``init_commands`` array in your application's hooker configuration.
+
 ### user
 
 Type: ``string``
@@ -68,7 +79,7 @@ Default: false
 
 Description: When set, the ``{{ user }}`` tag can be used in commands when you require to ``sudo -u (user)``, the user
 that the script runs under (eg. ``www-data``) must be configured for sudo rights in the ``/etc/sudoers`` file if you
-require to use this feature..
+require to use this feature.
 
 Example: ``root``
 
@@ -80,6 +91,24 @@ Default: false
 
 Description: When set to `true`, the site deployment configuration is loaded from a ``.hooker.json`` file found in the
 root of your ``local_repo`` path.
+
+### init_commands
+
+Type: ``array``
+
+Default: 
+
+```php
+[
+    'rm -Rf {{local-repo}}/* && rm -Rf {{local-repo}}/.* > /dev/null',
+    'cd {{local-repo}} && {{git-ssh-key}}{{git-bin}} clone {{remote-repo}} .',
+    'cd {{local-repo}} && {{git-bin}} checkout {{branch}}',
+]
+```
+
+Description: Array of commands to execute when the ``init`` parameter is present in the web hook URL. These commands
+will also only execute if the ``disable_init`` setting is set to ``false``. You can use [the in-line tag replacements](#dynamic-in-line-tags)
+for dynamic replacements in any of these commands.
 
 ### pre_commands
 
@@ -94,7 +123,11 @@ use [the in-line tag replacements](#dynamic-in-line-tags) for dynamic replacemen
 
 Type: ``array``
 
-Default: ``['cd {{local-repo}} && git reset --hard HEAD && git pull']``
+Default:
+
+```php
+['cd {{local-repo}} && git reset --hard HEAD && {{git-ssh-key}}{{git-bin}} git pull']
+```
 
 Description: Array of commands to execute on execution of the script, you can
 use [the in-line tag replacements](#dynamic-in-line-tags) for dynamic replacements.
