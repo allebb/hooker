@@ -141,12 +141,12 @@ return [
             ],
         ],
         
-        // An example Laravel Deployment Configuration using a local "hooker.json" repository configuration. (Webhook example: http://deploy.mysite.com/hooker.php?app=another_application&key=VgUjbEIPbOCpiRQa2UHjqiXcmbE8eIht)
+        // An example Laravel Deployment Configuration using a local ".hooker.json" repository configuration. (Webhook example: http://deploy.mysite.com/hooker.php?app=another_application&key=VgUjbEIPbOCpiRQa2UHjqiXcmbE8eIht)
         'another_application' => [
             'key' => 'VgUjbEIPbOCpiRQa2UHjqiXcmbE8eIht',
             'local_repo' => '/var/www/another_application',
             'git_ssh_key_path' => '/var/www/.ssh/id_rsa', // Optional - We can set a private (deployment key) that will be used when git makes requests.
-            'use_json' => 'true', // This will read the configuration from a hooker.json file stored in your git repo. eg. /var/www/another_application/hooker.json
+            'use_json' => 'true', // This will read the configuration from a .hooker.json file stored in your git repo. eg. /var/www/another_application/.hooker.json
         ],
 
 
@@ -266,18 +266,18 @@ cd /var/www/hooker
 sudo -u www-data git pull
 ```
 
-**Remember to check and update your ``hooker.conf.php`` and local ``hooker.json`` files with any new configuration
-options (where applicable), an overview of the "Configuration options" can be found in the next section.**
+**Remember to check and update your server's ``hooker.conf.php`` and if you are using them in your code repositories, your local ``.hooker.json`` files with any new configuration
+options, an overview of the "Configuration options" can be found in the next section.**
 
 ## Configuration options
 
 A full list and explanation of the configuration items and workflow "placeholders" tags can be found in
 the [Configuration Items](docs/CONFIGURATION-ITEMS.md) file.
 
-## Using a hooker.json configuration file in your codebase
+## Using a .hooker.json configuration file in your codebase
 
 Instead of having to edit and update the ``hooker.conf.php`` on the server each time you wish to make a change to the deployment
-workflow, a ``hooker.json`` file can be committed to your Git repository and will be used to define the workflow steps,
+workflow, a ``.hooker.json`` file can be committed to your Git repository and will be used to define the workflow steps,
 the syntax is as follows:
 
 **This example demonstrates the deployment of a Laravel web application**
@@ -308,15 +308,15 @@ the syntax is as follows:
 is important as an empty array here will override the default ``git pull`` commands, only uncomment this if you need to
 do custom tasks/customise the git pull command here.**
 
-**Keep in mind that the Hooker webservice will first check that a local ``hooker.json`` file exists and then uses the
-workflow steps within it, so you would have to effectively "hit" this endpoint twice for any ``hooker.json`` changes to
+**Keep in mind that the Hooker webservice will first check that a local ``.hooker.json`` file exists and then uses the
+workflow steps within it, so you would have to effectively "hit" this endpoint twice for any ``.hooker.json`` changes to
 take effect as the first time it's run, it will load the local file which in turn would then pull the latest changes
 from your repository and only then, on the next execution will it use the latest workflow instructions.**
 
 **For this to work, your Hooker configuration file MUST specify the ``local_repo`` and ``key`` properties
 in addition, the ``use_json`` property must also be set to ``true``.**
 
-For security reasons, when using a ``hooker.json`` file some overrides are not available and will need to be set in the
+For security reasons, when using a ``.hooker.json`` file some overrides are not available and will need to be set in the
 main Hooker web service configuration file (``hooker.conf.php``). These settings are: ``remote_repo``, ``branch``
 , ``local_repo``, ``key`` and ``user``.
 

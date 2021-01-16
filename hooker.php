@@ -214,8 +214,8 @@ checkIpAuth($config);
 checkKeyAuth($config);
 
 if ($config['use_json']) {
-    $localConfigPath = $config['local_repo'] . '/hooker.json';
-    debugLog("Deployment workflow is configured to use a local 'hooker.json' file, attempting to load this now from: {$localConfigPath}",
+    $localConfigPath = $config['local_repo'] . '/.hooker.json';
+    debugLog("Deployment workflow is configured to use a local '.hooker.json' file, attempting to load this now from: {$localConfigPath}",
         $config['debug']);
     $config = array_merge($config, loadLocalHookerConf($localConfigPath, $config));
 }
@@ -482,7 +482,7 @@ function outputAsciiArtHeader($show = false)
 }
 
 /**
- * Reads a local (versioned) Hooker Configuration file (hooker.json) and merges with the current default configuration.
+ * Reads a local (versioned) Hooker Configuration file (.hooker.json) and merges with the current default configuration.
  * @param string $path The file system path to the local repository.
  * @param array $baseConfiguration The configuration array to merge with.
  * @return array
@@ -497,17 +497,17 @@ function loadLocalHookerConf($path, $baseConfiguration = [])
         'user',
     ];
     if (!file_exists($path)) {
-        debugLog("The `hooker.json` file was not found at: {$path}, please fix and try again!", true);
+        debugLog("The `.hooker.json` file was not found at: {$path}, please fix and try again!", true);
         outputLog($baseConfiguration, true);
     }
 
     $localConfiguration = json_decode(file_get_contents($path), true);
     if (!$localConfiguration) {
-        debugLog("The `hooker.json` file syntax is invalid (it must be valid JSON), please fix and try again!", true);
+        debugLog("The `.hooker.json` file syntax is invalid (it must be valid JSON), please fix and try again!", true);
         outputLog($baseConfiguration, true);
     }
     $mergedConfig = array_merge($baseConfiguration, $localConfiguration);
-    debugLog("The `hooker.json` workflow has been loaded successfully!", $baseConfiguration['debug']);
+    debugLog("The `.hooker.json` workflow has been loaded successfully!", $baseConfiguration['debug']);
     return array_diff_key($mergedConfig, array_flip($disabledOverrides));
 }
 

@@ -74,12 +74,12 @@ return [
             ],
         ],
 
-        // An example Configuration using a local "hooker.json" repository configuration. (Webhook example: http://deploy.mysite.com/hooker.php?app=another_application&key=VgUjbEIPbOCpiRQa2UHjqiXcmbE8eIht)
+        // An example Configuration using a local ".hooker.json" repository configuration. (Webhook example: http://deploy.mysite.com/hooker.php?app=another_application&key=VgUjbEIPbOCpiRQa2UHjqiXcmbE8eIht)
         'another_application' => [
             'key' => 'VgUjbEIPbOCpiRQa2UHjqiXcmbE8eIht',
             'local_repo' => '@conductor', // This will auto-resolve to /var/conductor/applications/another_application
             'git_ssh_key_path' => '@conductor', // This will auto-resolve and use the private key at /var/www/.ssh/another_application.deploykey
-            'use_json' => 'true', // This will read the configuration from a hooker.json file stored in your git repo. eg. /var/www/another_application/hooker.json
+            'use_json' => 'true', // This will read the configuration from a .hooker.json file stored in your git repo. eg. /var/www/another_application/.hooker.json
         ],
 
 

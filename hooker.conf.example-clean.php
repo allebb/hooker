@@ -35,7 +35,7 @@ return [
         ],
 
         // (Webhook example: http://deploy.mysite.com/hooker.php?app=second_application&key=VgUjbEIPbOCpiRQa2UHjqiXcmbE8eIht)
-        // This example uses a local ``hooker.json`` for it's workflow configuration (this must be present in the root of your Git repository).
+        // This example uses a local ``.hooker.json`` for it's workflow configuration (this must be present in the root of your Git repository).
         'second_application' => [
             'key' => 'VgUjbEIPbOCpiRQa2UHjqiXcmbE8eIht',
             'local_repo' => '@conductor', // This will auto-resolve to /var/conductor/applications/second_application

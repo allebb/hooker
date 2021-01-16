@@ -1,8 +1,8 @@
 # Hooker Configuration
 
-Hooker uses an "inheritance" model for populating the configuration settings at runtime, most settings can be applied at the global level and then overridden in the ``sites`` array and, if you're using a ``hooker.json`` as part of your codebase, will then allow overriding too.
+Hooker uses an "inheritance" model for populating the configuration settings at runtime, most settings can be applied at the global level and then overridden in the ``sites`` array and, if you're using a ``.hooker.json`` as part of your codebase, will then allow overriding too.
 
-**Keep in mind that if you intend on using the ``hooker.json`` configuration method, The Hooker webservice will first check that a local ``hooker.json`` file exists and then uses the workflow steps within it, so you would have to effectively "hit" this endpoint twice for any ``hooker.json`` changes to take effect (if the new version has to be pulled from Git first) as the first time it's run, it will load the local file which in turn would then pull the latest changes from your repository and only then, on the next execution will it use the latest workflow instructions.**
+**Keep in mind that if you intend on using the ``.hooker.json`` configuration method, The Hooker webservice will first check that a local ``.hooker.json`` file exists and then uses the workflow steps within it, so you would have to effectively "hit" this endpoint twice for any ``.hooker.json`` changes to take effect (if the new version has to be pulled from Git first) as the first time it's run, it will load the local file which in turn would then pull the latest changes from your repository and only then, on the next execution will it use the latest workflow instructions.**
 
 ## Configuration items
 
@@ -78,7 +78,7 @@ Type: ``boolean``
 
 Default: false
 
-Description: When set to `true`, the site deployment configuration is loaded from a ``hooker.json`` file found in the
+Description: When set to `true`, the site deployment configuration is loaded from a ``.hooker.json`` file found in the
 root of your ``local_repo`` path.
 
 ### pre_commands
