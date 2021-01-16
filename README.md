@@ -208,20 +208,21 @@ just make adjustments as required):
 ```
 server {
     listen 80;
-    root /var/www/hooker;
-    server_name deploy.mysite.com;
 
     # Wish to secure and host your deployment web service over HTTPS using a LetsEncrypt SSL certificate?
     #listen          443 ssl;
-    #ssl_certificate /etc/letsencrypt/live/registry.hallinet.com/fullchain.pem;
-    #ssl_certificate_key /etc/letsencrypt/live/registry.hallinet.com/privkey.pem;
-    #ssl_trusted_certificate /etc/letsencrypt/live/registry.hallinet.com/chain.pem;
+    #ssl_certificate /etc/letsencrypt/live/{your_certificcate_name}/fullchain.pem;
+    #ssl_certificate_key /etc/letsencrypt/live/{your_certificcate_name}/privkey.pem;
+    #ssl_trusted_certificate /etc/letsencrypt/live/{your_certificcate_name}/chain.pem;
 
     # Recommendations from https://raymii.org/s/tutorials/Strong_SSL_Security_On_nginx.html
-    #ssl_protocols TLSv1.1 TLSv1.2;
-    #ssl_ciphers 'EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH';
+    #ssl_protocols TLSv1.2 TLSv1.3;
+    #ssl_ciphers 'ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384';
     #ssl_prefer_server_ciphers on;
     #ssl_session_cache shared:SSL:10m;
+
+    root /var/www/hooker;
+    server_name {your_domain};
 
     location / {
         try_files $uri $uri/ /index.php?$query_string;
@@ -270,12 +271,12 @@ options (where applicable), an overview of the "Configuration options" can be fo
 
 ## Configuration options
 
-A full list and explaination of the configuration items and workflow "placeholders" tags can be found in
+A full list and explanation of the configuration items and workflow "placeholders" tags can be found in
 the [Configuration Items](docs/CONFIGURATION-ITEMS.md) file.
 
-## Using a hooker.json configuration file
+## Using a hooker.json configuration file in your codebase
 
-Instead of having to edit and update the ``hooker.conf.php`` each time you wish to make a change to the deployment
+Instead of having to edit and update the ``hooker.conf.php`` on the server each time you wish to make a change to the deployment
 workflow, a ``hooker.json`` file can be committed to your Git repository and will be used to define the workflow steps,
 the syntax is as follows:
 
@@ -312,8 +313,8 @@ workflow steps within it, so you would have to effectively "hit" this endpoint t
 take effect as the first time it's run, it will load the local file which in turn would then pull the latest changes
 from your repository and only then, on the next execution will it use the latest workflow instructions.**
 
-**For this to work, your Hooker configuration file MUST specify the ``local_repo`` and ``key`` properties,
-the ``use_json`` must also be set to ``true``.**
+**For this to work, your Hooker configuration file MUST specify the ``local_repo`` and ``key`` properties
+in addition, the ``use_json`` property must also be set to ``true``.**
 
 For security reasons, when using a ``hooker.json`` file some overrides are not available and will need to be set in the
 main Hooker web service configuration file (``hooker.conf.php``). These settings are: ``remote_repo``, ``branch``

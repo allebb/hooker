@@ -135,7 +135,7 @@ $config = [
  *
  */
 
-const HOOKER_VERSION = "2.0.1";
+const HOOKER_VERSION = "2.0.2";
 
 const HTTP_OK = 200;
 const HTTP_UNAUTHORISED = 401;
@@ -155,6 +155,13 @@ if (file_exists(__DIR__ . '/hooker.conf.php')) {
     $config_file = require_once __DIR__ . '/hooker.conf.php';
     $config = array_merge($config, $config_file);
     debugLog("Loading configuration from configuration override file (hooker.conf.php)", $config['debug']);
+}
+
+// Allows overriding from a JSON file instead (designed for UI based management interfaces to easily export configurations)
+if (file_exists(__DIR__ . '/hooker.conf.json')) {
+    $config_file = json_decode(file_get_contents(__DIR__ . '/hooker.conf.json'), true);
+    $config = array_merge($config, $config_file);
+    debugLog("Loading configuration from configuration override file (hooker.conf.json)", $config['debug']);
 }
 
 outputAsciiArtHeader($config['debug']);

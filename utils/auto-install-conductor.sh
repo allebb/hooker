@@ -64,11 +64,12 @@ echo ""
 echo "Now creating an SSH key (which should be used for automated Git functionality)..."
 sudo mkdir /var/www/.ssh
 sudo chown www-data:www-data -R /var/www/.ssh
-sudo -u www-data ssh-keygen -t rsa -b 2048 -N "" -C "hooker@${fqdn}" -q -f /var/www/.ssh/id_rsa > /dev/null
+sudo -u www-data ssh-keygen -t rsa -b 4096 -N "" -C "hooker@${fqdn}" -q -f /var/www/.ssh/id_rsa > /dev/null
 if [ $? -ne 0 ]; then
     echo " ! Could not create an SSH key, please create one manually for the www-data user!"
 else
 	echo ""
+	echo "**If you intend on using per-application deployment keys you can skip this step!**"
 	echo "Your SSH key has now been generated, you should copy and paste this key (/var/www/.ssh/id_rsa.pub) to your"
 	echo "GitHub and/or other online version control systems that Hooker needs to connect with using SSH."
 	echo ""
@@ -94,6 +95,11 @@ echo "    http://${fqdn}/hooker.php?app=[YOUR_APP_NAME]&key=[YOUR_SECRET_KEY]"
 echo ""
 echo "Visit the documentation on the GitHub project page in order to learn how to configure your"
 echo "workflows and to secure your Hooker installation over HTTPS."
+echo ""
+echo ""
+echo "You can automatically provision a LetsEncrypt SSL certificate for this domain by running this command:"
+echo ""
+echo "    conductor letsencrypt ${appname}"
 echo ""
 echo "Installation complete!"
 exit 0
