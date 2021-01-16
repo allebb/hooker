@@ -37,7 +37,7 @@ return [
             //    // Uses the default (inherited deployment commands)
             //],
             //'deploy_commands' => [
-            //    // Uses the default (inherited deployment commands eg. cd {{local-repo}} && {{git-bin}} reset --hard HEAD && {{git-ssh-key}}{{git-bin}} pull)
+            //    // Uses the default (inherited deployment commands eg. cd {{local-repo}} && {{git-ssh-key}}{{git-bin}} reset --hard HEAD && {{git-ssh-key}}{{git-bin}} pull)
             //],
             //'post_commands' => [
             //    // Uses the default (inherited deployment commands)

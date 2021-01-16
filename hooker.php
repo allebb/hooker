@@ -135,7 +135,7 @@ $config = [
  *
  */
 
-const HOOKER_VERSION = "2.0.2";
+const HOOKER_VERSION = "2.0.3";
 
 const HTTP_OK = 200;
 const HTTP_UNAUTHORISED = 401;
