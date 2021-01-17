@@ -225,7 +225,7 @@ checkIpAuth($config);
 checkKeyAuth($config);
 
 if ($config['use_json']) {
-    $localConfigPath = $config['local_repo'] . '/.hooker.json';
+    $localConfigPath = buildLocalRepoPath($config['local_repo']) . '/.hooker.json';
     debugLog("Deployment workflow is configured to use a local '.hooker.json' file, attempting to load this now from: {$localConfigPath}",
         $config['debug']);
     $config = array_merge($config, loadLocalHookerConf($localConfigPath, $config));
