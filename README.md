@@ -1,16 +1,16 @@
 # Hooker
 
 Hooker is a lightweight PHP web application that can be used to trigger remote workflows on your Linux or UNIX based
-servers.
+servers. It is fully self-contained by design (a single script), it doesn't have any external dependencies and does not require any package managers such as Composer making it perfect for inclusion into legacy projects too.
 
 It has specifically been designed to simplify and automate application deployments using Git or Docker containers when
-you don't want or need the complexity of a full CI/CD setup but you can easily use it for a ton of other really useful
+you don't want or need the complexity of a full CI/CD setup, but you can easily use it for a ton of other really useful
 tasks.
 
 ## Requirements
 
 * A web server (the installation guide uses Nginx)
-* PHP 5.4+.
+* PHP 5.4+
 * The ``shell_exec()`` function is required (Some shared hosting environments disable this!)
 
 ## License
@@ -20,7 +20,7 @@ use it, fork it, improve it and contribute by open a pull-request!
 
 ## Installation
 
-The installation involves creating a new virtual host configuration of which then acts as a web-hook endpoint for
+It is recommended to set-up a new virtual host configuration on your web server of which then acts as a web-hook endpoint for
 multiple configured projects.
 
 You should create separate site configurations that then get triggered by specifying the site/application configuration
@@ -32,10 +32,13 @@ with the ``app`` parameter eg. ``https://deploy.mysite.com/hooker.php?app=websit
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/allebb/hooker/stable/utils/auto-install-conductor.sh)"
 ```
 
+> Hooker is fully self-contained in a single script (it doesn't have any external dependency and therefore doesn't't require the need to pull dependencies from Composer or ``include`` a ton of external scripts) so if you wish to include this single script into an existing project simple copy the ``hooker.php`` file and update the default values within this file to your needs.
+
 #### Creating the new virtualhost directory
 
-In this example, we'll create a new Nginx vhost configuration, first we need to create a hosting directory to host
-our ``hooker.php`` file:
+In this example, we'll create a new Nginx vhost configuration on an Ubuntu Linux server and use the default ``www-data`` user (for simplicity and demonstration purposes).
+
+First we need to create a hosting directory to host our ``hooker.php`` file:
 
 ```shell
 sudo -u www-data mkdir /var/www/hooker
@@ -246,7 +249,7 @@ cd /etc/nginx/sites-enabled
 ln -s ../sites-available/hooker.conf .
 ```
 
-Now restart Nginx for the new virtualhost configuration to take affect:
+Now restart Nginx for the new virtualhost configuration to take effect:
 
 ```shell
 sudo service nginx restart
@@ -370,7 +373,49 @@ steps.
 
 ### Configuring Hooker with BitBucket Webhooks
 
-** TBC **
+As per the GitHub section above (see for context), you can also enable your configuration to receive standard webhooks from BitBucket.
+
+You should configure your BitBucket webhook like so:
+
+![BitBucket web hook configuration](https://blog.bobbyallen.me/wp-content/uploads/2021/01/Screenshot-2021-01-25-at-11.58.12.png "Example BitBucket webhook configuration.")
+
+Enabling BitBucket support is as simple as setting your site configuration to match this example:
+
+```text
+'sites' => [
+    'my-example-webapp' => [
+        ...
+        'key' => 'MyRandomDeploymentKey',
+        'remote_repo' => 'git@bitbucket.org:allebb/example.git',
+        'is_bitbucket' => true, // Using BitBucket webhooks to trigger this workflow.
+        'branch' => 'deploy-prod', // As long as the BitBucket webhook request relates to changes on this git branch, we'll run the deployment workflow!
+        ...
+    ],
+]
+```
+
+### Configuring Hooker with GitLab Webhooks
+
+As per the GitHub section above (see for context), you can also enable your configuration to receive standard webhooks from GitLab.
+
+You should configure your GitLab webhook like so:
+
+![GitLab web hook configuration](https://blog.bobbyallen.me/wp-content/uploads/2021/01/Screenshot-2021-01-25-at-11.56.06.png "Example GitLab webhook configuration.")
+
+Enabling GitLab support is as simple as setting your site configuration to match this example:
+
+```text
+'sites' => [
+    'my-example-webapp' => [
+        ...
+        'key' => 'MyRandomDeploymentKey',
+        'remote_repo' => 'git@gitlab.com:allebb/example.git',
+        'is_gitlab' => true, // Using GitLab webhooks to trigger this workflow.
+        'branch' => 'deploy-prod', // As long as the GitLab webhook request relates to changes on this git branch, we'll run the deployment workflow!
+        ...
+    ],
+]
+```
 
 ## Bugs
 

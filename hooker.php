@@ -107,6 +107,20 @@ $config = [
     ],
 
     /**
+     * If the repo is GitLab hosted, set to true, this will ensure
+     * web-hook is only executed on configured events..
+     */
+    'is_gitlab' => false,
+
+    /**
+     * List of configured hooks that the code will deploy on (when using GitHub option)
+     * @see https://docs.gitlab.com/ee/user/project/integrations/webhooks.html#events
+     */
+    'gitlab_deploy_events' => [
+        'Push Hook',
+    ],
+
+    /**
      * Configurable whitelist of IP addresses that are allowed to trigger deployments.
      */
     'ip_whitelist' => [
@@ -264,6 +278,9 @@ if (isset($_GET['init'])) {
     outputLog($config, true);
 }
 
+/**
+ * GitHub Branch and Hook Event checking.
+ */
 if ($config['is_github']) {
     debugLog("Repository flagged as GitHub hosted.", $config['debug']);
     if (!in_array(requestHeader('X-Github-Event'), $config['github_deploy_events'])) {
@@ -294,6 +311,9 @@ if ($config['is_github']) {
     }
 }
 
+/**
+ * BitBucket Branch and Hook Event checking.
+ */
 if ($config['is_bitbucket']) {
     debugLog("Repository flagged as BitBucket hosted.", $config['debug']);
     if (!in_array(requestHeader('X-Event-Key'), $config['bitbucket_deploy_events'])) {
@@ -301,6 +321,60 @@ if ($config['is_bitbucket']) {
         debugLog("The BitBucket hook event (" . requestHeader('X-Event-Key') . ") was not found in the 'bitbucket_deploy_events' list, skipping the deployment!",
             $config['debug']);
         outputLog($config, true);
+    }
+
+    if (requestHeader('Content-Type') == 'application/json') {
+        $payload = json_decode(file_get_contents('php://input'), true);
+        if (!$payload) {
+            setStatusCode(HTTP_ERROR);
+            debugLog("Unable to decode the JSON payload, check that the webhook is configured to use `application/json` as the Content type, skipping branch matching...",
+                $config['debug']);
+            outputLog($config, true);
+        }
+
+        if (!isset($payload['ref']['push']['changes']['old']['name']) || $payload['ref']['push']['changes']['old']['name'] !== $config['branch']) {
+            setStatusCode(HTTP_OK);
+            debugLog("Branch matching failed, configuration checking for '" . 'refs/heads/' . $config['branch'] . "' but BitBucket sent: " . $payload['ref']['push']['changes']['old']['name'] . "' instead! Skipping this deployment!",
+                $config['debug']);
+            debugLog("Skipping this deployment!", $config['debug']);
+            outputLog($config, true);
+        }
+
+        debugLog("Branch matching successful, BitBucket triggered the webhook for branch: " . $config['branch'] . ", continuing with the deployment...",
+            $config['debug']);
+    }
+}
+
+/**
+ * GitLab Hook Event checking.
+ */
+if ($config['is_gitlab']) {
+    debugLog("Repository flagged as GitLab hosted.", $config['debug']);
+    if (!in_array(requestHeader('X-Gitlab-Event'), $config['gitlab_deploy_events'])) {
+        setStatusCode(HTTP_OK);
+        debugLog("The GitLab hook event (" . requestHeader('X-Gitlab-Event') . ") was not found in the 'gitlab_deploy_events' list, skipping the deployment!",
+            $config['debug']);
+        outputLog($config, true);
+    }
+
+    if (requestHeader('Content-Type') == 'application/json') {
+        $payload = json_decode(file_get_contents('php://input'), true);
+        if (!$payload) {
+            setStatusCode(HTTP_ERROR);
+            debugLog("Unable to decode the JSON payload, skipping branch matching...", $config['debug']);
+            outputLog($config, true);
+        }
+
+        if (!isset($payload['ref']) || $payload['ref'] !== 'refs/heads/' . $config['branch']) {
+            setStatusCode(HTTP_OK);
+            debugLog("Branch matching failed, configuration checking for '" . 'refs/heads/' . $config['branch'] . "' but GitLab sent: " . $payload['ref'] . "' instead! Skipping this deployment!",
+                $config['debug']);
+            debugLog("Skipping this deployment!", $config['debug']);
+            outputLog($config, true);
+        }
+
+        debugLog("Branch matching successful, GitHub triggered the webhook for branch: " . $config['branch'] . ", continuing with the deployment...",
+            $config['debug']);
     }
 }
 

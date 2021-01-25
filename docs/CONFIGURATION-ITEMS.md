@@ -177,6 +177,24 @@ Default: ``['repo:push']``
 Description: List of configured hook event headers that the code will deploy on (when using the ``is_bitbucket`` option
 is enabled)
 
+### is_gitlab
+
+Type: ``boolean``
+
+Default: false
+
+Description: If set, this will ensure that the hook only deploys the code on the configured GitLab hook events in
+order to minimise unnecessary application downtime, bandwidth and server resources.
+
+### gitlab_deploy_events
+
+Type: ``array``
+
+Default: ``['Push Hook']``
+
+Description: List of configured hook event headers that the code will deploy on (when using the ``is_bitbucket`` option
+is enabled)
+
 ### ip_whitelist
 
 Type: ``array``
