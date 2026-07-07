@@ -3,15 +3,24 @@
 Hooker is a lightweight PHP web application that can be used to trigger remote workflows on your Linux or UNIX based
 servers. It is fully self-contained by design (a single script), it doesn't have any external dependencies and does not require any package managers such as Composer making it perfect for inclusion into legacy projects too.
 
-It has specifically been designed to simplify and automate application deployments using Git or Docker containers when
-you don't want or need the complexity of a full CI/CD setup, but you can easily use it for a ton of other really useful
-tasks.
+It has specifically been designed to simplify and automate application deployments using Git or Docker containers when you don't want or need the complexity of a full CI/CD setup, but you can easily use it for a ton of other really useful tasks.
 
 ## Requirements
 
 * A web server (the installation guide uses Nginx)
-* PHP 5.4+
+* PHP 5.4+ (recommended and more recently tested on PHP 8.3, 8.4, and 8.5)
 * The ``shell_exec()`` function is required (Some shared hosting environments disable this!)
+
+## Testing
+
+The project has a PHPUnit test suite (unit tests for the pure helper functions, plus functional tests that drive a
+real instance of ``hooker.php`` over HTTP) that runs against PHP 8.3, 8.4 and 8.5 in both GitHub Actions
+(``.github/workflows/tests.yml``) and GitLab CI (``.gitlab-ci.yml``). To run it locally:
+
+```bash
+composer install
+composer test
+```
 
 ## License
 

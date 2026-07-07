@@ -1,0 +1,27 @@
+stages:
+  - test
+
+.test_template: &test_template
+  stage: test
+  before_script:
+    - apt-get update -yqq
+    - apt-get install -yqq git unzip
+    - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+    - php -v
+  script:
+    - php -l hooker.php
+    - php -l index.php
+    - composer install --no-interaction --no-progress --prefer-dist
+    - vendor/bin/phpunit
+
+test:php8.3:
+  <<: *test_template
+  image: php:8.3-cli
+
+test:php8.4:
+  <<: *test_template
+  image: php:8.4-cli
+
+test:php8.5:
+  <<: *test_template
+  image: php:8.5-cli

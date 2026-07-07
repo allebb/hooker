@@ -51,6 +51,16 @@ $config = [
     'user' => false,
 
     /**
+     * Prevent the ?init parameter from being used to (re)initialise a deployment.
+     */
+    'disable_init' => false,
+
+    /**
+     * Load the deployment workflow configuration from a local '.hooker.json' file within the repository.
+     */
+    'use_json' => false,
+
+    /**
      * Initialise commands to run .
      */
     'init_commands' => [
@@ -157,7 +167,7 @@ $config = [
  *
  */
 
-const HOOKER_VERSION = "2.1.0";
+const HOOKER_VERSION = "3.0.0";
 
 const HTTP_OK = 200;
 const HTTP_UNAUTHORISED = 401;
@@ -166,6 +176,8 @@ const HTTP_NOTFOUND = 404;
 const HTTP_ERROR = 500;
 
 $log = [];
+
+if (!defined('HOOKER_TESTING')) {
 
 header("Content-Type: text/plain");
 
@@ -195,7 +207,7 @@ if ((!function_exists('shell_exec'))) {
     outputLog($config, true);
 }
 
-$git_output = trim(shell_exec($config['git_bin'] . ' --version 2>&1'));
+$git_output = trim((string) shell_exec($config['git_bin'] . ' --version 2>&1'));
 if ((!strpos($git_output, 'version'))) {
     setStatusCode(HTTP_ERROR);
     debugLog("The 'git' binary was not found or could not be executed on your server, aborting deployment!",
@@ -218,6 +230,9 @@ $config = array_merge([
     'key' => $config['key'],
     'user' => $config['user'],
     'use_json' => $config['use_json'],
+    'remote_repo' => $config['remote_repo'],
+    'branch' => $config['branch'],
+    'local_repo' => $config['local_repo'],
     'git_bin' => $config['git_bin'],
     'git_ssh_key_path' => $config['git_ssh_key_path'],
     'php_bin' => $config['php_bin'],
@@ -226,6 +241,8 @@ $config = array_merge([
     'github_deploy_events' => $config['github_deploy_events'],
     'is_bitbucket' => $config['is_bitbucket'],
     'bitbucket_deploy_events' => $config['bitbucket_deploy_events'],
+    'is_gitlab' => $config['is_gitlab'],
+    'gitlab_deploy_events' => $config['gitlab_deploy_events'],
     'disable_init' => $config['disable_init'],
     'ip_whitelist' => $config['ip_whitelist'],
     'init_commands' => $config['init_commands'],
@@ -390,6 +407,8 @@ setStatusCode(HTTP_OK);
 outputLog($config);
 echo "done!";
 
+} // end HOOKER_TESTING guard
+
 /**
  * Responds to the PING request.
  * return void
@@ -409,7 +428,7 @@ function handlePingRequest()
  */
 function executeAndCaptureOutput($execute)
 {
-    return shell_exec($execute . ' 2>&1');
+    return (string) shell_exec($execute . ' 2>&1');
 }
 
 /**

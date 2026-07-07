@@ -51,7 +51,7 @@ return [
             'local_repo' => '@conductor', // This will auto-resolve to /var/conductor/applications/my_other_website
             'git_ssh_key_path' => '@conductor', // This will auto-resolve and use the private key at /var/www/.ssh/my_other_website.deploykey
             'user' => false,
-            'php_bin' => '/usr/bin/php8.0',
+            'php_bin' => '/usr/bin/php8.5',
             // Override the "default" PHP version used for this deployment/running Composer, this application needs PHP 8.0!
             //'composer_bin' => '/usr/bin/composer', // Need to override with a different Composer version?
             'pre_commands' => [
