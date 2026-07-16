@@ -240,6 +240,11 @@ server {
         try_files $uri $uri/ /index.php?$query_string;
     }
 
+    # Deny access to Hooker configuration files.
+    location ~ /hooker\.conf[^/]*$ {
+        deny all;
+    }
+
     location ~ \.php$ {
         try_files $uri /index.php =404;
         fastcgi_split_path_info ^(.+\.php)(/.+)$;
@@ -426,11 +431,16 @@ Enabling GitLab support is as simple as setting your site configuration to match
 ]
 ```
 
+## Optional web admin
+
+Hooker includes an optional (albeit very basic) web admin panel at ``/webadmin`` for editing ``hooker.conf.php`` and manually running
+configured deployments via a browser. The web admin is protected with HTTP Basic Authentication; change the default
+credentials in ``webadmin/auth.php`` before enabling this feature. By default the feature is disabled; enable it by
+editing ``webadmin/auth.php`` and setting ``enable_webadmin_feature`` to ``true`` (otherwise it will return a 404 response when trying to access it).
+
 ## Bugs
 
 Please report any bugs on the [Issue Tracker](https://github.com/allebb/hooker/issues), please ensure that bug reports
 are clear and contain as much information as possible.
 
 Bug reports will be looked at and resolved as soon as possible!
-
-

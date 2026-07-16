@@ -3,6 +3,7 @@
 .DS_Store
 hooker.conf.php
 hooker.conf.json
+hooker.conf.test
 /vendor
 /.phpunit.cache
 .phpunit.result.cache

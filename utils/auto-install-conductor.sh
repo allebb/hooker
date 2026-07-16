@@ -41,6 +41,10 @@ sudo -u www-data git checkout stable
 # Copy the hooker.conf.example file to hooker.conf.php
 sudo -u www-data cp /var/conductor/applications/$appname/hooker.conf.example-clean.php /var/conductor/applications/$appname/hooker.conf.php
 
+# Install the Hooker command line helper
+sudo cp /var/conductor/applications/$appname/utils/hooker /usr/bin/hooker
+sudo chmod +x /usr/bin/hooker
+
 # Copy the default Nginx virtualhost configuration to the Conductor application configuration...
 sudo cp /var/conductor/applications/$appname/utils/auto-install-conductor_nginx.conf /etc/conductor/configs/$appname.conf
 

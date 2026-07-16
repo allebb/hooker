@@ -37,7 +37,7 @@ $config = [
      * Which branch to pull/checkout from.
      * Example: master
      */
-    'branch' => 'master',
+    'branch' => 'main',
 
     /**
      * Local repository/hosted directory.
@@ -180,16 +180,20 @@ $log = [];
 if (!defined('HOOKER_TESTING')) {
 
 header("Content-Type: text/plain");
+initialiseStreamingOutput();
+$streamingLogsActive = false;
 
 handlePingRequest();
 
 // Read current PHP version that this script is using.
 $php_version = phpversion();
 
-if (file_exists(__DIR__ . '/hooker.conf.php')) {
-    $config_file = require_once __DIR__ . '/hooker.conf.php';
+ensureLocalTestConfigExists(__DIR__);
+$configPath = activeHookerConfigPath(__DIR__);
+if (file_exists($configPath)) {
+    $config_file = require_once $configPath;
     $config = array_merge($config, $config_file);
-    debugLog("Loading configuration from configuration override file (hooker.conf.php)", $config['debug']);
+    debugLog("Loading configuration from configuration override file (" . basename($configPath) . ")", $config['debug']);
 }
 
 // Allows overriding from a JSON file instead (designed for UI based management interfaces to easily export configurations)
@@ -220,8 +224,8 @@ debugLog("Git version detected: {$git_output}", $config['debug']);
 
 $application = (isset($_GET['app'])) ? $_GET['app'] : false;
 if (!$application || !isset($config['sites'][$application])) {
-    debugLog("The requested site/application ({$application}) configuration was not found!", $config['debug']);
     setStatusCode(HTTP_NOTFOUND);
+    debugLog("The requested site/application ({$application}) configuration was not found!", $config['debug']);
     outputLog($config, true);
 }
 
@@ -284,14 +288,13 @@ if (isset($_GET['init'])) {
         outputLog($config, true);
     }
 
+    setStatusCode(HTTP_OK);
+    beginStreamingLogOutput($config);
     debugLog("Local initialisation has been requested, running the initialisation commands...", $config['debug']);
     foreach (replaceCommandPlaceHolders($config, $config['init_commands']) as $execute) {
-        $exec_output = trim(executeAndCaptureOutput($execute));
-        debugLog("RUN [{$execute}]" . PHP_EOL . ":::::    RESULT    :::::" . PHP_EOL . $exec_output . PHP_EOL . "::::::::::::::::::::::::",
-            $config['debug']);
+        executeAndLogCommand($execute, $config);
     }
     debugLog("Local initialisation has been completed!", $config['debug']);
-    setStatusCode(HTTP_OK);
     outputLog($config, true);
 }
 
@@ -395,17 +398,17 @@ if ($config['is_gitlab']) {
     }
 }
 
+setStatusCode(HTTP_OK);
+beginStreamingLogOutput($config);
 foreach (
     replaceCommandPlaceHolders($config,
         array_merge($config['pre_commands'], $config['deploy_commands'], $config['post_commands'])) as $execute
 ) {
-    $exec_output = trim(executeAndCaptureOutput($execute));
-    debugLog("RUN [{$execute}]" . PHP_EOL . ":::::    RESULT    :::::" . PHP_EOL . $exec_output . PHP_EOL . "::::::::::::::::::::::::",
-        $config['debug']);
+    executeAndLogCommand($execute, $config);
 }
-setStatusCode(HTTP_OK);
 outputLog($config);
 echo "done!";
+flushOutput();
 
 } // end HOOKER_TESTING guard
 
@@ -421,14 +424,148 @@ function handlePingRequest()
     }
 }
 
+function initialiseStreamingOutput()
+{
+    if (defined('HOOKER_TESTING')) {
+        return;
+    }
+
+    define('HOOKER_STREAMING_OUTPUT', true);
+
+    ini_set('output_buffering', '0');
+    ini_set('zlib.output_compression', '0');
+    ini_set('implicit_flush', '1');
+    ob_implicit_flush(true);
+
+    while (ob_get_level() > 0) {
+        ob_end_flush();
+    }
+
+    header('X-Accel-Buffering: no');
+    header('Cache-Control: no-cache');
+}
+
+function isStreamingOutputEnabled()
+{
+    return defined('HOOKER_STREAMING_OUTPUT') && HOOKER_STREAMING_OUTPUT;
+}
+
+function isStreamingLogOutputActive()
+{
+    return isStreamingOutputEnabled() && !empty($GLOBALS['streamingLogsActive']);
+}
+
+function beginStreamingLogOutput($config)
+{
+    if (!isStreamingOutputEnabled() || isStreamingLogOutputActive()) {
+        return;
+    }
+
+    $GLOBALS['streamingLogsActive'] = true;
+
+    if ($config['debug'] && !empty($GLOBALS['log'])) {
+        echo implode(PHP_EOL, $GLOBALS['log']) . PHP_EOL;
+        flushOutput();
+    }
+}
+
+function flushOutput()
+{
+    if (!isStreamingOutputEnabled()) {
+        return;
+    }
+
+    if (function_exists('ob_flush') && ob_get_level() > 0) {
+        ob_flush();
+    }
+
+    flush();
+}
+
+function activeHookerConfigPath(string $root): string
+{
+    return isLocalhostRequest() ? $root . '/hooker.conf.test' : $root . '/hooker.conf.php';
+}
+
+function ensureLocalTestConfigExists(string $root): void
+{
+    $testConfigPath = $root . '/hooker.conf.test';
+
+    if (!isLocalhostRequest() || file_exists($testConfigPath)) {
+        return;
+    }
+
+    $exampleConfigPath = $root . '/hooker.conf.example.php';
+    if (file_exists($exampleConfigPath)) {
+        copy($exampleConfigPath, $testConfigPath);
+    }
+}
+
+function isLocalhostRequest(): bool
+{
+    $host = strtolower((string) ($_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? ''));
+    $host = trim($host, '[]');
+    $host = preg_replace('/:\d+$/', '', $host) ?? $host;
+
+    return $host === 'localhost';
+}
+
 /**
  * Executes a system command and returns the stdOut.
  * @param $execute
  * @return mixed
  */
-function executeAndCaptureOutput($execute)
+function executeAndCaptureOutput($execute, $streamOutput = true)
 {
+    if (isStreamingOutputEnabled()) {
+        return executeAndStreamOutput($execute, $streamOutput);
+    }
+
     return (string) shell_exec($execute . ' 2>&1');
+}
+
+function executeAndStreamOutput($execute, $streamOutput = true)
+{
+    $process = proc_open($execute . ' 2>&1', [
+        1 => ['pipe', 'w'],
+    ], $pipes);
+
+    if (!is_resource($process)) {
+        return '';
+    }
+
+    $output = '';
+    while (!feof($pipes[1])) {
+        $chunk = fread($pipes[1], 8192);
+        if ($chunk === false || $chunk === '') {
+            usleep(10000);
+            continue;
+        }
+
+        $output .= $chunk;
+        if ($streamOutput) {
+            echo $chunk;
+            flushOutput();
+        }
+    }
+
+    fclose($pipes[1]);
+    proc_close($process);
+
+    return $output;
+}
+
+function executeAndLogCommand($execute, $config)
+{
+    debugLog("RUN [{$execute}]", $config['debug']);
+    debugLog(":::::    RESULT    :::::", $config['debug']);
+
+    $exec_output = trim(executeAndCaptureOutput($execute, $config['debug']));
+    if (!isStreamingOutputEnabled() && $exec_output !== '') {
+        debugLog($exec_output, $config['debug']);
+    }
+
+    debugLog("::::::::::::::::::::::::", $config['debug']);
 }
 
 /**
@@ -441,6 +578,11 @@ function debugLog($message, $output = false)
 {
     if ($output) {
         $GLOBALS['log'][] = date("c") . ' - ' . $message;
+
+        if (isStreamingLogOutputActive()) {
+            echo date("c") . ' - ' . $message . PHP_EOL;
+            flushOutput();
+        }
     }
 }
 
@@ -581,10 +723,11 @@ function setStatusCode($status = HTTP_OK)
  */
 function outputLog($config, $exit = false)
 {
-    if ($config['debug']) {
+    if ($config['debug'] && !isStreamingLogOutputActive()) {
         echo implode(PHP_EOL, $GLOBALS['log']) . PHP_EOL;
     }
     if ($exit) {
+        flushOutput();
         exit;
     }
 }
@@ -643,4 +786,3 @@ function loadLocalHookerConf($path, $baseConfiguration = [])
     debugLog("The `.hooker.json` workflow has been loaded successfully!", $baseConfiguration['debug']);
     return array_diff_key($mergedConfig, array_flip($disabledOverrides));
 }
-

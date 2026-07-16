@@ -1,0 +1,202 @@
+#!/usr/bin/env php
+<?php
+
+const CONDUCTOR_APPLICATIONS_PATH = '/var/conductor/applications';
+const DEPLOY_KEY_PATH = '/var/www/.ssh';
+
+function usage(): void
+{
+    fwrite(STDERR, <<<TEXT
+Usage:
+  hooker clone <appname> --repo=<git repo> [--branch=<branch>]
+  hooker checkout <appname> --branch=<branch>
+  hooker pull <appname>
+  hooker update <appname>
+  hooker fetch <appname>
+  hooker reset <appname>
+
+TEXT);
+}
+
+function fail(string $message, int $exitCode = 1): never
+{
+    fwrite(STDERR, " ! {$message}" . PHP_EOL);
+    exit($exitCode);
+}
+
+function validateAppName(string $appname): void
+{
+    if (!preg_match('/^[A-Za-z0-9._-]+$/', $appname) || $appname === '.' || $appname === '..') {
+        fail('Invalid application name. Use only letters, numbers, dots, underscores, and hyphens.');
+    }
+}
+
+function applicationPath(string $appname): string
+{
+    return CONDUCTOR_APPLICATIONS_PATH . '/' . $appname;
+}
+
+function deployKeyPath(string $appname): string
+{
+    return DEPLOY_KEY_PATH . '/' . $appname . '.deploykey';
+}
+
+function parseOptions(array $args): array
+{
+    $options = [];
+
+    foreach ($args as $arg) {
+        if (!str_starts_with($arg, '--') || !str_contains($arg, '=')) {
+            fail("Unknown argument: {$arg}");
+        }
+
+        [$name, $value] = explode('=', substr($arg, 2), 2);
+        $options[$name] = $value;
+    }
+
+    return $options;
+}
+
+function assertApplicationDirectory(string $path): void
+{
+    if (!is_dir($path)) {
+        fail("Application directory does not exist: {$path}");
+    }
+}
+
+function assertDirectoryIsEmpty(string $path): void
+{
+    assertApplicationDirectory($path);
+
+    $entries = array_diff(scandir($path) ?: [], ['.', '..']);
+    if (count($entries) > 0) {
+        fail('There are existing files that must be deleted before you can run this command!');
+    }
+}
+
+function runCommand(string $command): int
+{
+    passthru($command, $exitCode);
+    return $exitCode;
+}
+
+function runInApplicationDirectory(string $appname, callable $callback): int
+{
+    $path = applicationPath($appname);
+    assertApplicationDirectory($path);
+
+    $originalDirectory = getcwd();
+    if ($originalDirectory === false) {
+        fail('Could not determine the current working directory.');
+    }
+
+    if (!chdir($path)) {
+        fail("Could not change into application directory: {$path}");
+    }
+
+    try {
+        return $callback();
+    } finally {
+        chdir($originalDirectory);
+    }
+}
+
+function gitWithDeployKeyCommand(string $appname, string $gitCommand): string
+{
+    $innerCommand = 'ssh-add ' . escapeshellarg(deployKeyPath($appname)) . '; ' . $gitCommand;
+
+    return 'sudo -u www-data ssh-agent bash -c ' . escapeshellarg($innerCommand);
+}
+
+function promptForResetConfirmation(): bool
+{
+    fwrite(STDOUT, 'This will discard uncommitted changes. Do you wish to continue? [y/N] ');
+    $answer = fgets(STDIN);
+
+    return is_string($answer) && in_array(strtolower(trim($answer)), ['y', 'yes'], true);
+}
+
+array_shift($argv);
+
+if (count($argv) < 2) {
+    usage();
+    exit(1);
+}
+
+$command = array_shift($argv);
+$appname = array_shift($argv);
+validateAppName($appname);
+
+$exitCode = match ($command) {
+    'clone' => (function () use ($appname, $argv): int {
+        $options = parseOptions($argv);
+        $repo = $options['repo'] ?? '';
+        $branch = $options['branch'] ?? '';
+
+        if ($repo === '') {
+            fail('The clone command requires --repo=<git repo>.');
+        }
+
+        $path = applicationPath($appname);
+        assertDirectoryIsEmpty($path);
+
+        return runInApplicationDirectory($appname, function () use ($appname, $repo, $branch): int {
+            $cloneCommand = gitWithDeployKeyCommand($appname, 'git clone ' . escapeshellarg($repo) . ' .');
+            $exitCode = runCommand($cloneCommand);
+
+            if ($exitCode !== 0) {
+                return $exitCode;
+            }
+
+            if ($branch === '') {
+                return 0;
+            }
+
+            return runCommand('sudo -u www-data git checkout ' . escapeshellarg($branch));
+        });
+    })(),
+    'pull', 'update' => runInApplicationDirectory(
+        $appname,
+        fn (): int => runCommand(gitWithDeployKeyCommand($appname, 'git pull'))
+    ),
+    'fetch' => runInApplicationDirectory(
+        $appname,
+        fn (): int => runCommand(gitWithDeployKeyCommand($appname, 'git fetch'))
+    ),
+    'checkout' => (function () use ($appname, $argv): int {
+        $options = parseOptions($argv);
+        $branch = $options['branch'] ?? '';
+
+        if ($branch === '') {
+            fail('The checkout command requires --branch=<branch>.');
+        }
+
+        return runInApplicationDirectory($appname, function () use ($appname, $branch): int {
+            $exitCode = runCommand(gitWithDeployKeyCommand($appname, 'git fetch'));
+
+            if ($exitCode !== 0) {
+                return $exitCode;
+            }
+
+            return runCommand('sudo -u www-data git checkout ' . escapeshellarg($branch));
+        });
+    })(),
+    'reset' => (function () use ($appname): int {
+        if (!promptForResetConfirmation()) {
+            fwrite(STDOUT, 'Reset cancelled.' . PHP_EOL);
+            return 1;
+        }
+
+        return runInApplicationDirectory(
+            $appname,
+            fn (): int => runCommand(gitWithDeployKeyCommand($appname, 'git reset --hard HEAD'))
+        );
+    })(),
+    default => (function () use ($command): int {
+        fwrite(STDERR, " ! Unknown command: {$command}" . PHP_EOL);
+        usage();
+        return 1;
+    })(),
+};
+
+exit($exitCode);
