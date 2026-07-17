@@ -279,7 +279,7 @@ function lintHookerConfigContents(string $contents): void
 
         $output = [];
         $exitCode = 0;
-        exec(escapeshellarg(PHP_BINARY) . ' -l ' . escapeshellarg($tempPhpFile) . ' 2>&1', $output, $exitCode);
+        exec(escapeshellarg(phpCliBinary()) . ' -l ' . escapeshellarg($tempPhpFile) . ' 2>&1', $output, $exitCode);
 
         if ($exitCode !== 0) {
             throw new RuntimeException("The generated PHP configuration did not pass lint testing. Please fix the form values and try again.\n" . implode("\n", $output));
@@ -289,6 +289,34 @@ function lintHookerConfigContents(string $contents): void
             unlink($tempPhpFile);
         }
     }
+}
+
+function phpCliBinary(): string
+{
+    $candidates = [];
+
+    if (PHP_BINARY !== '' && !str_contains(basename(PHP_BINARY), 'php-fpm')) {
+        $candidates[] = PHP_BINARY;
+    }
+
+    $candidates[] = PHP_BINDIR . '/php';
+    $candidates[] = '/usr/bin/php';
+    $candidates[] = '/usr/local/bin/php';
+
+    foreach (array_unique($candidates) as $candidate) {
+        if ($candidate !== '' && is_file($candidate) && is_executable($candidate)) {
+            return $candidate;
+        }
+    }
+
+    $output = [];
+    $exitCode = 0;
+    exec('command -v php 2>/dev/null', $output, $exitCode);
+    if ($exitCode === 0 && isset($output[0]) && is_executable($output[0])) {
+        return $output[0];
+    }
+
+    throw new RuntimeException('Unable to find a PHP CLI binary for configuration lint testing.');
 }
 
 function activeHookerConfigPath(): string
